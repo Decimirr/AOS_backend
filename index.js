@@ -4,7 +4,7 @@ const path = require('path')
 const bodyParser = require( 'body-parser')
 const cors = require('cors')
 const util = require("./util");
-const port = 3000
+const port = process.env.PORT || 8080
 
 app.use(cors())
 /*app.use(function (req, res, next) {
@@ -24,6 +24,9 @@ app.use("/api/team", require("./api/team"));
 app.use("/api/scoreboard", require("./api/scoreboard"));
 app.use("/api/map", require("./api/map"));
 
+app.get('/', (req, res)=>{
+    res.send("Hello, world!")
+})
 
 app.listen(port, function (){
     console.log(`Server is working on port ${port}`);

@@ -63,14 +63,14 @@ router.post('/submit/text', (req, res) => {
         const sql_scoreboard = "SELECT * FROM scoreboard WHERE mission_id=?, team_id=?"
         const scoreboard_param = [req.body.mission_id, req.body.team_id]
         con.query(sql_scoreboard, scoreboard_param, (err, result) => {
-            if (result && result.length !== 0 && result[0].status === "correct")
+            if (result && result.length !== 0 && result[0].status === "correct") // 이미 풀림
                 return res.json(util.successFalse("Already solved", "problem is already solved"))
-            else{
+            else{ // 안풀림
                 con.query("SELECT * FROM mission_text_answer WHERE mission_id=?", [mission._id], (err, result)=>{
                     if (err) return res.json(util.successFalse(orr, "MissionTextAnswer not fount (!FATAL)"))
                     const mission_text_answer = result[0]
 
-                    if (mission_text_answer.answer !== req.body.answer){
+                    if (mission_text_answer.answer !== req.body.answer){ // 오답
                         const sql_submit = "INSERT INTO scoreboard SET ? ON DUPLICATE KEY UPDATE submit_count=submit_count+1"
                         const submit_param = [{mission_id: mission._id, team_id: req.body.team_id, score: 0, status: "wrong"}]
                         con.query(sql_submit, submit_param, (err, result) => {
@@ -78,7 +78,7 @@ router.post('/submit/text', (req, res) => {
                             else { res.json(util.successTrue(result)); return; }
                         })
                     }
-                    else { // 무인미션 정답
+                    else { // 정답
                         const sql_submit = "INSERT INTO scoreboard SET ? ON DUPLICATE KEY UPDATE score=(SELECT GREATEST(?, ?-submit_count*?)), status='correct'"
                         const new_data = {mission_id: mission._id, team_id: req.body.team_id, score: mission_text_answer.base_score, status: "correct"}
                         const submit_param = [new_data, mission_text_answer.min_score, mission_text_answer.base_score, mission_text_answer.decr_score]
@@ -128,7 +128,6 @@ router.post("/submit/image", uploads.answer_image_upload.single("answer_image"),
 
 
 router.post('/check', (req, res) => {
-    //TODO: 유인 미션인지 검증
     const sql_check = "INSERT INTO scoreboard SET ? ON DUPLICATE KEY UPDATE ?"
     const new_data = {
         mission_id: req.body.mission_id,

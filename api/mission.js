@@ -23,11 +23,13 @@ router.get('/by-training/:training_id', (req, res) => {
 
     con.query(sql, query_param, function (err, result, fields) {
         if (err || !result) res.json(util.successFalse(err));
-        else res.json(util.successTrue(result))
+        else {
+            res.json(util.successTrue(result))
+        }
     })
 })
 router.post('/:id', (req, res) => {
-    const required_keys = ["mission_name", "is_manned", "problem", "answer_type"]
+    const required_keys = ["mission_name", "is_manned", "problem", "answer_type", "prerequisites"]
     const query_param = {}
     for (const key of required_keys){
         if (req.body[key] == null)
@@ -43,7 +45,7 @@ router.post('/:id', (req, res) => {
     })
 })
 router.put('/:id', (req, res) => {
-    const allowed_keys = ["mission_name", "is_manned", "problem", "answer_type"]
+    const allowed_keys = ["mission_name", "is_manned", "problem", "answer_type", "prerequisites"]
     const errs = []
     for (const key in req.body){
         if (allowed_keys.includes(key)){
@@ -105,6 +107,54 @@ router.put('/text-answer/:id', (req, res) => {
     for (const key in req.body){
         if (allowed_keys.includes(key)){
             const sql = `UPDATE mission_text_answer SET ${key}=? WHERE mission_id=?`
+            const query_param = [req.body[key], req.params.id]
+            con.query(sql, query_param, function (err, result, fields){
+                if (err || !result) {
+                    console.log(err)
+                    errs.push(err)
+                }
+            })
+        }
+    }
+    if (errs.length !== 0)
+        return res.json(util.successFalse(errs))
+    else
+        res.json(util.successTrue({}))
+})
+
+
+router.get('/gps-answer/:id', (req, res) => {
+    const sql = "SELECT * FROM mission_gps_answer WHERE mission_id=?"
+    const query_param = [req.params.id]
+
+    con.query(sql, query_param, (err, result) => {
+        if (err) res.json(util.successFalse(err));
+        else res.json(util.successTrue(result[0]))
+    })
+})
+router.post("/gps-answer/:id", (req, res) => {
+    const required_keys = ["lat", "lng", "base_score"]
+    const query_param = {}
+    for (const key of required_keys){
+        if (req.body[key] == null)
+            return res.json(util.successFalse("KeyNotExist", key + " is not exist"))
+        else
+            query_param[key] = req.body[key]
+    }
+    query_param["mission_id"] = req.params.id
+    const sql = "INSERT INTO mission_gps_answer SET ?"
+    console.log(query_param)
+    con.query(sql, query_param, (err, result) => {
+        if (err) res.json(util.successFalse(err, "err with post mission_gps_answer"))
+        else res.json(util.successTrue(result[0]))
+    })
+})
+router.put('/gps-answer/:id', (req, res) => {
+    const allowed_keys = ["lat", "lng", "base_score"]
+    const errs = []
+    for (const key in req.body){
+        if (allowed_keys.includes(key)){
+            const sql = `UPDATE mission_gps_answer SET ${key}=? WHERE mission_id=?`
             const query_param = [req.body[key], req.params.id]
             con.query(sql, query_param, function (err, result, fields){
                 if (err || !result) {
