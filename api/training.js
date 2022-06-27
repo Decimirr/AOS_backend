@@ -100,7 +100,8 @@ router.get("/manual-map/:id", (req, res) => {
         }
     })
 })
-router.post("/manual-map/:id", uploads.manual_map_upload.single("manual_map_image"), (req, res) => {
+//TODO: I changed this
+router.post("/manual-map/:id", uploads.upload_blob.single("manual_map_image"), (req, res) => {
     if (req.file == null)
         return res.json(util.successFalse("No problem image provided", "No problem image provided"))
     const sql = "INSERT INTO manual_map SET ?"
