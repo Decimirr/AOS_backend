@@ -91,24 +91,18 @@ router.get("/manual-map/:id", (req, res) => {
     const query_param = [req.params.id]
     con.query(sql, query_param, (err, result) => {
         if (err) { console.log(err); res.json(util.successFalse(err)); }
-        else {
-            result.forEach(element => {
-                const bitmap = fs.readFileSync(process.cwd() + '\\' + element.map_image)
-                element.base64 = new Buffer.from(bitmap).toString("base64")
-            })
-            res.json(util.successTrue(result))
-        }
+        else { res.json(util.successTrue(result)) }
     })
 })
-//TODO: I changed this
 router.post("/manual-map/:id", uploads.upload_blob.single("manual_map_image"), (req, res) => {
     if (req.file == null)
         return res.json(util.successFalse("No problem image provided", "No problem image provided"))
     const sql = "INSERT INTO manual_map SET ?"
     const query_param = {
         training_id: req.params.id,
-        map_image: req.file.path
+        map_image: req.file.url.split("?")[0]
     }
+    console.log(req.file.url)
     con.query(sql, query_param, (err, result) => {
         if (err) { console.log(err); res.json(util.successFalse(err, "err with upload problem image")) }
         else res.json(util.successTrue(result[0]))

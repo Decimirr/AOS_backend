@@ -92,7 +92,8 @@ router.post('/submit/text', (req, res) => {
         })
     })
 })
-router.post("/submit/image", uploads.answer_image_upload.single("answer_image"), (req, res) => {
+router.post("/submit/image", uploads.upload_blob.single("answer_image"), (req, res) => {
+    console.log("working")
     if (req.file == null)
         return res.json(util.successFalse("No answer image provided", "No answer image provided"))
     const required_keys = ["mission_id", "team_id"]
@@ -103,13 +104,15 @@ router.post("/submit/image", uploads.answer_image_upload.single("answer_image"),
 
     const sql1 = "INSERT INTO answer_pending SET ? ON DUPLICATE KEY UPDATE ?;"
     const sql2 = "INSERT INTO scoreboard SET ? ON DUPLICATE KEY UPDATE ?;"
+
+    console.log(req.file.url.split("?")[0])
     const query_param = [
         {
             mission_id: req.body.mission_id,
             team_id: req.body.team_id,
-            answer: req.file.path,
+            answer: req.file.url.split("?")[0],
         },
-        { answer: req.file.path },
+        { answer: req.file.url.split("?")[0] },
         {
             mission_id: req.body.mission_id,
             team_id: req.body.team_id,
@@ -154,15 +157,7 @@ router.get("/answer-pending/:mission_id/:team_id", (req, res) => {
             res.json(util.successFalse(err, "error getting answer-pending"))
         }
         else{
-            console.log(result)
-            con.query("SELECT * FROM mission WHERE _id=?", [req.params.mission_id], (err, missions) => {
-                if (err) { console.log(err); res.json(util.successFalse(err, "err while getting answer-pending")); return; }
-                if (missions[0].answer_type === 'image'){
-                    const bitmap = fs.readFileSync(process.cwd() + '\\' + result[0].answer)
-                    result[0].base64 = new Buffer.from(bitmap).toString("base64")
-                }
-                res.json(util.successTrue(result[0]))
-            })
+            res.json(util.successTrue(result[0]))
         }
     })
 })

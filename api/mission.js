@@ -182,17 +182,15 @@ router.get('/problem-image/:id', (req, res) => {
             res.json(util.successFalse("no file"))
         }
         else {
-            const bitmap = fs.readFileSync(process.cwd() + '\\' + result[0].image)
-            const base64 = new Buffer.from(bitmap).toString("base64")
-            res.json(util.successTrue(base64))
+            res.json(util.successTrue(result[0]))
         }
     })
 })
-router.post("/problem-image/:id", uploads.problem_upload.single("problem_image"), (req, res) => {
+router.post("/problem-image/:id", uploads.upload_blob.single("problem_image"), (req, res) => {
     if (req.file == null)
         return res.json(util.successFalse("No problem image provided", "No problem image provided"))
     const sql = "INSERT INTO mission_problem_image SET ? ON DUPLICATE KEY UPDATE ?"
-    const query_param = [ { mission_id: req.params.id, image: req.file.path },  { image: req.file.path } ]
+    const query_param = [ { mission_id: req.params.id, image: req.file.url.split("?")[0] },  { image: req.file.url.split("?")[0] } ]
     con.query(sql, query_param, (err, result) => {
         if (err) {
             console.log(err)
