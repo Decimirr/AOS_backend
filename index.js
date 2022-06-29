@@ -23,6 +23,7 @@ app.use("/api/mission", require("./api/mission"));
 app.use("/api/team", require("./api/team"));
 app.use("/api/scoreboard", require("./api/scoreboard"));
 app.use("/api/map", require("./api/map"));
+app.use("/api/auth", require("./api/auth"));
 
 
 app.listen(port, function (){
