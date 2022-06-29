@@ -79,9 +79,9 @@ router.post('/submit/text', (req, res) => {
                         })
                     }
                     else { // 정답
-                        const sql_submit = "INSERT INTO scoreboard SET ? ON DUPLICATE KEY UPDATE score=(SELECT GREATEST(?, ?-submit_count*?)), status='correct'"
-                        const new_data = {mission_id: mission._id, team_id: req.body.team_id, score: mission_text_answer.base_score, status: "correct"}
-                        const submit_param = [new_data, mission_text_answer.min_score, mission_text_answer.base_score, mission_text_answer.decr_score]
+                        const sql_submit = "INSERT INTO scoreboard SET ? ON DUPLICATE KEY UPDATE score=IF(? > ?-submit_count*?, ?, ?-submit_count*?), status='correct'"
+                        const new_data = { mission_id: mission._id, team_id: req.body.team_id, score: mission_text_answer.base_score, status: "correct" }
+                        const submit_param = [new_data, mission_text_answer.min_score, mission_text_answer.base_score, mission_text_answer.decr_score, mission_text_answer.min_score, mission_text_answer.base_score, mission_text_answer.decr_score]
                         con.query(sql_submit, submit_param, (err, result) => {
                             if (err) { console.log(err); res.json(util.successFalse(err, "err while marking correct in unmanned mission")); return; }
                             else { res.json(util.successTrue(result)); return; }
