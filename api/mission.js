@@ -45,7 +45,7 @@ router.post('/:id', (req, res) => {
     })
 })
 router.put('/:id', (req, res) => {
-    const allowed_keys = ["mission_name", "is_manned", "problem", "answer_type", "prerequisites"]
+    const allowed_keys = ["mission_name", "is_manned", "problem", "answer_type", "prerequisites", "position"]
     const errs = []
     for (const key in req.body){
         if (allowed_keys.includes(key)){
