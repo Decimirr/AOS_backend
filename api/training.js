@@ -41,7 +41,7 @@ router.post('/', (req, res) => {
     })
 })
 router.put('/:id', (req, res) => {
-    const allowed_keys = ["order_code", "company_code", "company_name", "training_name", "summary", "tips", "start_time", "end_time"]
+    const allowed_keys = ["order_code", "company_code", "company_name", "training_name", "summary", "tips", "start_time", "end_time", "theme"]
     const time_keys = ["start_time", "end_time"]
     const errs = []
     for (let key in req.body){
