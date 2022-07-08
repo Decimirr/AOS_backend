@@ -44,6 +44,15 @@ router.get('/total-score/:training_id', (req, res) => {
         else res.json(util.successTrue(result))
     })
 })
+// for special purpose
+router.get('/teams-cleared/:training_id', (req, res) => {
+    const sql = "SELECT mission_id, COUNT(*) AS num, (SELECT COUNT(*) FROM team WHERE training_id=?) AS total FROM (scoreboard JOIN (SELECT * FROM mission WHERE training_id=?) t1 ON (scoreboard.mission_id = t1._id)) WHERE status='correct' GROUP BY  mission_id;"
+    const query_param = [req.params.training_id, req.params.training_id]
+    con.query(sql, query_param, (err, result)=>{
+        if (err) res.json(util.successFalse(err))
+        else res.json(util.successTrue(result))
+    })
+})
 
 router.post('/submit/text', (req, res) => {
     const required_keys = ["mission_id", "team_id", "answer"]
@@ -171,5 +180,8 @@ router.delete("/:mission_id/:team_id", (req, res) => {
     })
 
 })
+
+
+
 
 module.exports = router
