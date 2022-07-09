@@ -33,4 +33,32 @@ router.post("/marker/:training_id", (req, res) => {
   })
 })
 
+const current_locations = {}
+
+router.get("/location-control/:training_id", (req, res)=>{
+  const sql = "SELECT _id, team_name FROM team WHERE training_id=?;"
+  const query_param = [req.params.training_id]
+  con.query(sql, query_param, (err, result) => {
+    if (err) { console.log(err); return res.json(util.successFalse(err)) }
+    else{
+      locations = []
+      result.forEach((team) => {
+        if (current_locations[team._id] != null){
+          locations.push({team_id: team._id, team_name: team.team_name, lat: current_locations[team._id].lat, lng: current_locations[team._id].lng})
+        }
+      })
+      return res.json(util.successTrue(locations))
+    }
+  })
+})
+router.post("/location-control/:team_id", (req, res) => {
+  const lat = req.body.lat
+  const lng = req.body.lng
+  if (lat == null || lng == null)
+    return res.json(util.successFalse("KeyNotExist", "lat or lng is not provided"))
+
+  current_locations[req.params.team_id] = {lat: lat, lng: lng}
+  res.json(util.successTrue(null))
+})
+
 module.exports = router
