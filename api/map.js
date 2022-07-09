@@ -42,9 +42,9 @@ router.get("/location-control/:training_id", (req, res)=>{
     if (err) { console.log(err); return res.json(util.successFalse(err)) }
     else{
       locations = []
-      result.forEach((team) => {
+      result.forEach((team, i) => {
         if (current_locations[team._id] != null){
-          locations.push({team_id: team._id, team_name: team.team_name, lat: current_locations[team._id].lat, lng: current_locations[team._id].lng})
+          locations.push({team_id: team._id, team_name: team.team_name, index: i, lat: current_locations[team._id].lat, lng: current_locations[team._id].lng})
         }
       })
       return res.json(util.successTrue(locations))
@@ -58,6 +58,7 @@ router.post("/location-control/:team_id", (req, res) => {
     return res.json(util.successFalse("KeyNotExist", "lat or lng is not provided"))
 
   current_locations[req.params.team_id] = {lat: lat, lng: lng}
+  console.log(current_locations)
   res.json(util.successTrue(null))
 })
 
