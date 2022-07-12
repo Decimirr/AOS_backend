@@ -1,7 +1,7 @@
 const multer = require('multer');
 const {MulterAzureStorage} = require("multer-azure-blob-storage");
-const connect_string = process.env.storage_connect_string
-const access_key = process.env.storage_key
+const connect_string = process.env.storage_connect_string || "DefaultEndpointsProtocol=https;AccountName=storecuwvv4ix3vtva;AccountKey=S9T5x7RaFD5l055yLg4AN37VyUh9iKBKwW0Yt+aZTPtD9NitKUH0T17Fg/DsFNl1b8qx+E2d5lfW+AStfkJckw==;EndpointSuffix=core.windows.net"
+const access_key = process.env.storage_key || "S9T5x7RaFD5l055yLg4AN37VyUh9iKBKwW0Yt+aZTPtD9NitKUH0T17Fg/DsFNl1b8qx+E2d5lfW+AStfkJckw=="
 const account_name = "storecuwvv4ix3vtva"
 
 const azureStorage = new MulterAzureStorage({
