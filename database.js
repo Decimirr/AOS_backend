@@ -9,4 +9,9 @@ con.connect(function(err) {
 })
 */
 
+con.query("SELECT * FROM training", (err, result) => {
+  console.log(err)
+  console.log(result)
+})
+
 module.exports = con
