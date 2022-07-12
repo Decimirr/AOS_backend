@@ -29,13 +29,17 @@ router.get('/by-training/:training_id', (req, res) => {
     })
 })
 router.post('/:id', (req, res) => {
-    const required_keys = ["mission_name", "is_manned", "problem", "answer_type", "prerequisites"]
+    const required_keys = ["mission_name", "is_manned", "answer_type", "prerequisites"]
+    const allowed_keys = ["problem", ]
     const query_param = {}
     for (const key of required_keys){
         if (req.body[key] == null)
             return res.json(util.successFalse("KeyNotExist", key + " is not exist"))
         else
             query_param[key] = req.body[key]
+    }
+    for (const key of allowed_keys){
+        query_param[key] = req.body[key]
     }
     query_param["training_id"] = req.params.id
     const sql = "INSERT INTO mission SET position=(SELECT IFNULL(MAX(position) + 1, 1) FROM mission b), ?"
