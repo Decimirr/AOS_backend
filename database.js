@@ -12,6 +12,7 @@ const con = mysql.createPool({
   connectTimeout  : 60 * 60 * 1000,
   acquireTimeout  : 60 * 60 * 1000,
   timeout         : 60 * 60 * 1000,
+  connectionLimit: 30,
 });
 
 module.exports = con

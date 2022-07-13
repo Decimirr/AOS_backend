@@ -6,6 +6,7 @@ const uploads = require("../uploads")
 const fs = require("fs");
 
 router.get('/', (req, res) => {
+    console.log("TRAINING LIST")
     const sql = 'SELECT * FROM training'
     con.query(sql, function (err, result, fields) {
         if (err || !result) return res.json(util.successFalse(err));
