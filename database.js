@@ -15,4 +15,10 @@ const con = mysql.createPool({
   connectionLimit: 30,
 });
 
+console.log("CONNECTION TEST...")
+con.query("SELECT * FROM training", (err, result) => {
+  console.log(err)
+  console.log(result)
+})
+
 module.exports = con
