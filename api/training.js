@@ -9,7 +9,10 @@ router.get('/', (req, res) => {
     console.log("TRAINING LIST")
     const sql = 'SELECT * FROM training'
     con.query(sql, function (err, result, fields) {
-        if (err || !result) return res.json(util.successFalse(err));
+        if (err || !result) {
+            console.log(err)
+            return res.json(util.successFalse(err));
+        }
         res.json(util.successTrue(result))
     })
 })
