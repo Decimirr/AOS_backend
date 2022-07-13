@@ -9,7 +9,7 @@ const con = mysql.createConnection({
   port:3306,
   ssl:{rejectUnauthorized: false, ca:fs.readFileSync("./secret/BaltimoreCyberTrustRoot.crt.pem")},
   multipleStatements: true,
-  connectTimeout  : 60 * 60 * 1000,
+  connectTimeout  : 30 * 24 * 60 * 60 * 1000,
   acquireTimeout  : 60 * 60 * 1000,
   timeout         : 60 * 60 * 1000,
   connectionLimit: 30,
