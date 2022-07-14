@@ -3,7 +3,7 @@ const router = express.Router();
 const util = require('../util')
 const con = require("../database");
 
-router.get("/", (req, res) => {
+router.post("/", (req, res) => {
   const required_keys = ["paramName"]
   for (const key of required_keys){
     if (req.body[key] == null)
@@ -18,7 +18,7 @@ router.get("/", (req, res) => {
   })
 })
 
-router.post('/', (req, res) => {
+router.put('/', (req, res) => {
   const required_keys = ["paramName", "paramValue"]
   for (const key of required_keys){
     if (req.body[key] == null)
