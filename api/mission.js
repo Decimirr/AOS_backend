@@ -204,7 +204,53 @@ router.post("/problem-image/:id", uploads.upload_blob.single("problem_image"), (
     })
 })
 
-
-
+router.get("/location/:id", (req, res) => {
+    const sql = "SELECT * FROM mission_location WHERE mission_id=?"
+    const query_param = [req.params.id]
+    con.query(sql, query_param, (err, result) => {
+        if (err) {
+            console.log(err)
+            res.json(util.successFalse(err, "err with getting location"))
+        }
+        else res.json(util.successTrue(result[0]))
+    })
+})
+router.post("/location/:id", (req, res) => {
+    const required_keys = ["lat", "lng"]
+    const query_param = {}
+    for (const key of required_keys){
+        if (req.body[key] == null)
+            return res.json(util.successFalse("KeyNotExist", key + " is not exist"))
+        else
+            query_param[key] = req.body[key]
+    }
+    query_param["mission_id"] = req.params.id
+    const sql = "INSERT INTO mission_location SET ?"
+    console.log(query_param)
+    con.query(sql, query_param, (err, result) => {
+        if (err) res.json(util.successFalse(err, "err with post mission_location"))
+        else res.json(util.successTrue(result[0]))
+    })
+})
+router.put('/location/:id', (req, res) => {
+    const allowed_keys = ["lat", "lng"]
+    const errs = []
+    for (const key in req.body){
+        if (allowed_keys.includes(key)){
+            const sql = `UPDATE mission_location SET ${key}=? WHERE mission_id=?`
+            const query_param = [req.body[key], req.params.id]
+            con.query(sql, query_param, function (err, result, fields){
+                if (err || !result) {
+                    console.log(err)
+                    errs.push(err)
+                }
+            })
+        }
+    }
+    if (errs.length !== 0)
+        return res.json(util.successFalse(errs))
+    else
+        res.json(util.successTrue({}))
+})
 
 module.exports = router
