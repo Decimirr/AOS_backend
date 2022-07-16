@@ -29,7 +29,7 @@ router.get('/by-training/:training_id', (req, res) => {
     })
 })
 router.post('/:id', (req, res) => {
-    const required_keys = ["mission_name", "is_manned", "answer_type", "prerequisites"]
+    const required_keys = ["mission_name", "is_manned", "answer_type", "prerequisites", "location"]
     const allowed_keys = ["problem", ]
     const query_param = {}
     for (const key of required_keys){
@@ -49,7 +49,7 @@ router.post('/:id', (req, res) => {
     })
 })
 router.put('/:id', (req, res) => {
-    const allowed_keys = ["mission_name", "is_manned", "problem", "answer_type", "prerequisites", "position"]
+    const allowed_keys = ["mission_name", "is_manned", "problem", "answer_type", "prerequisites", "position", "location"]
     const errs = []
     for (const key in req.body){
         if (allowed_keys.includes(key)){
