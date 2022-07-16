@@ -24,7 +24,7 @@ router.get('/by-training/:training_id', (req, res) => {
     con.query(sql, query_param, function (err, result, fields) {
         if (err || !result) res.json(util.successFalse(err));
         else {
-            res.json(util.successTrue(result))
+            res.json(util.successTrue(result[0]))
         }
     })
 })
