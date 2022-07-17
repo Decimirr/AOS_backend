@@ -217,16 +217,19 @@ router.get("/location/:id", (req, res) => {
 })
 router.post("/location/:id", (req, res) => {
     const required_keys = ["lat", "lng"]
-    const query_param = {}
+    const param = {}
     for (const key of required_keys){
         if (req.body[key] == null)
             return res.json(util.successFalse("KeyNotExist", key + " is not exist"))
         else
-            query_param[key] = req.body[key]
+            param[key] = req.body[key]
     }
-    query_param["mission_id"] = req.params.id
-    const sql = "INSERT INTO mission_location SET ?"
-    console.log(query_param)
+    param["mission_id"] = req.params.id
+
+    const sql = "INSERT INTO mission_location SET ? ON DUPLICATE KEY UPDATE ?"
+    const query_param = [param, param]
+
+    console.log(param)
     con.query(sql, query_param, (err, result) => {
         if (err) res.json(util.successFalse(err, "err with post mission_location"))
         else res.json(util.successTrue(result[0]))
