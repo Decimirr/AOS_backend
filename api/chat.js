@@ -32,7 +32,7 @@ router.delete('/:id', (req, res) => {
   const sql = "DELETE FROM chat WHERE id=?"
   const query_param = [req.params.id]
   con.query(sql, query_param, (err, result) => {
-    if (err) res.json(util.successFalse(err, "err with get chat"))
+    if (err) res.json(util.successFalse(err, "err with getting chat"))
     else res.json(util.successTrue())
   })
 })
