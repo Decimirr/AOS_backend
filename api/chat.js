@@ -4,7 +4,7 @@ const util = require('../util')
 const con = require("../database");
 
 router.post('/:training_id', (req, res) => {
-  const required_keys = ["sender", "content", "time"]
+  const required_keys = ["sender", "team_id", "content"]
   const query_param = {}
   for (const key of required_keys){
     if (req.body[key] == null)

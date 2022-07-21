@@ -24,7 +24,8 @@ app.use("/api/team", require("./api/team"));
 app.use("/api/scoreboard", require("./api/scoreboard"));
 app.use("/api/map", require("./api/map"));
 app.use("/api/auth", require("./api/auth"));
-app.use("/api/params", require("./api/params"))
+app.use("/api/params", require("./api/params"));
+app.use("/api/chat", require("./api/chat"));
 
 
 app.listen(port, function (){
