@@ -16,7 +16,7 @@ router.post('/:training_id', (req, res) => {
   const sql = "INSERT INTO chat SET ?"
   console.log(query_param)
   con.query(sql, query_param, (err, result) => {
-    if (err) res.json(util.successFalse(err, "err with get chat"))
+    if (err) res.json(util.successFalse(err, "err with getting chat"))
     else res.json(util.successTrue(result[0]))
   })
 })
