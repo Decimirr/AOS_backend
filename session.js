@@ -16,11 +16,18 @@ const createSession = (team_id) => {
   else{
     session[team_id] = [{ id: new_id, lat: null, lng: null }]
   }
+  console.log("created")
+  console.log(session)
   return new_id
 }
 
 const isValidSession = (session_id) => {
-  return session.some(t => t.some(s => s.id === session_id))
+  console.log(session)
+  console.log(session_id)
+  for (const team_id in session)
+    if (session[team_id].some(s => s.id == session_id))
+      return true
+  return false
 }
 
 const setLocation = (session_id, lat, lng) => {

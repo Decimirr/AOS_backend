@@ -23,7 +23,7 @@ router.get('/by-passcode/:passcode', (req, res) => {
         if (err) return res.json(util.successFalse(err))
         else if (!result[0]) return res.json(util.successFalse("TeamNotExist", "팀이 존재하지 않습니다"))
         else {
-            result[0].session_id = session.createSession(req.params.team_id)
+            result[0].session_id = session.createSession(result[0]._id)
             res.json(util.successTrue(result[0]))
         }
     })
