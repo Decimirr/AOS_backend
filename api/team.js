@@ -3,6 +3,7 @@ const router = express.Router();
 const con = require('../database')
 const util = require('../util')
 const {successFalse} = require("../util");
+const session = require("../session");
 
 
 router.get('/:id', (req, res) => {
@@ -21,7 +22,10 @@ router.get('/by-passcode/:passcode', (req, res) => {
     con.query(sql, query_param, (err, result) => {
         if (err) return res.json(util.successFalse(err))
         else if (!result[0]) return res.json(util.successFalse("TeamNotExist", "팀이 존재하지 않습니다"))
-        else return res.json(util.successTrue(result[0]))
+        else {
+
+            res.json(util.successTrue(result[0]))
+        }
     })
 })
 
@@ -91,6 +95,16 @@ router.delete('/:id', (req, res) => {
         if (err || !result) return res.json(util.successFalse(err));
         res.json(util.successTrue(result))
     })
+})
+
+router.post('/session/:team_id', (req, res) => {
+    res.json(util.successTrue(session.createSession(req.params.team_id)))
+})
+router.get('/session/:session_id', (req, res) => {
+    if (session.isValidSession(req.params.session_id))
+        res.json(util.successTrue(null))
+    else
+        res.json(util.successFalse("SessionExceeds", "한 팀에서 셋 이상의 접속이 감지되어 로그인이 오래된 순으로 연결이 해제되었습니다."))
 })
 
 module.exports = router
