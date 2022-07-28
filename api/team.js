@@ -23,7 +23,7 @@ router.get('/by-passcode/:passcode', (req, res) => {
         if (err) return res.json(util.successFalse(err))
         else if (!result[0]) return res.json(util.successFalse("TeamNotExist", "팀이 존재하지 않습니다"))
         else {
-
+            result[0].session_id = session.createSession(req.params.team_id)
             res.json(util.successTrue(result[0]))
         }
     })
@@ -97,9 +97,7 @@ router.delete('/:id', (req, res) => {
     })
 })
 
-router.post('/session/:team_id', (req, res) => {
-    res.json(util.successTrue(session.createSession(req.params.team_id)))
-})
+
 router.get('/session/:session_id', (req, res) => {
     if (session.isValidSession(req.params.session_id))
         res.json(util.successTrue(null))
