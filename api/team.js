@@ -99,10 +99,12 @@ router.delete('/:id', (req, res) => {
 
 
 router.get('/session/:session_id', (req, res) => {
-    if (session.isValidSession(req.params.session_id))
+    try{
+        session.isValidSession(req.params.session_id)
         res.json(util.successTrue(null))
-    else
-        res.json(util.successFalse("SessionExceeds", "한 팀에서 셋 이상의 접속이 감지되어 로그인이 오래된 순으로 연결이 해제되었습니다."))
+    } catch (err){
+        res.json(util.successFalse("SessionErr", err))
+    }
 })
 
 module.exports = router

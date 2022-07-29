@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const con = require('../database')
 const util = require('../util')
+const session = require('../session')
 
 
 router.get("/marker/:training_id", (req, res) => {
@@ -51,14 +52,13 @@ router.get("/location-control/:training_id", (req, res)=>{
     }
   })
 })
-router.post("/location-control/:team_id", (req, res) => {
+router.post("/location-control/:session_id", (req, res) => {
   const lat = req.body.lat
   const lng = req.body.lng
   if (lat == null || lng == null)
     return res.json(util.successFalse("KeyNotExist", "lat or lng is not provided"))
 
-  current_locations[req.params.team_id] = {lat: lat, lng: lng}
-  console.log(current_locations)
+  session.setLocation(req.params.session_id, lat, lng)
   res.json(util.successTrue(null))
 })
 
