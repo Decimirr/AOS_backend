@@ -1,7 +1,7 @@
 const mysql = require('mysql')
 const fs = require('fs')
 
-const con = mysql.createConnection({
+const config = {
   host:"aos-database.mysql.database.azure.com",
   user:"Decimirr",
   password:process.env.database_password,
@@ -13,7 +13,10 @@ const con = mysql.createConnection({
   acquireTimeout  : 60 * 60 * 1000,
   timeout         : 60 * 60 * 1000,
   connectionLimit: 30,
-})
+}
+
+
+let con = mysql.createConnection(config)
 /*
 const con = mysql.createPool({
   host:"aos-database.mysql.database.azure.com",
@@ -29,10 +32,28 @@ const con = mysql.createPool({
   connectionLimit: 30,
 });
 */
-console.log("CONNECTION TEST...")
-con.query("SELECT * FROM training", (err, result) => {
-  console.log(err)
-  console.log(result)
-})
+
+function handleDisconnect() {
+  con = mysql.createConnection(config); // Recreate the connection, since
+                                                  // the old one cannot be reused.
+
+  con.connect(function(err) {              // The server is either down
+    if(err) {                                     // or restarting (takes a while sometimes).
+      console.log('error when connecting to db:', err);
+      setTimeout(handleDisconnect, 2000); // We introduce a delay before attempting to reconnect,
+    }                                     // to avoid a hot loop, and to allow our node script to
+  });                                     // process asynchronous requests in the meantime.
+                                          // If you're also serving http, display a 503 error.
+  con.on('error', function(err) {
+    console.log('db error', err);
+    if(err.code === 'PROTOCOL_CONNECTION_LOST') { // Connection to the MySQL server is usually
+      handleDisconnect();                         // lost due to either server restart, or a
+    } else {                                      // connnection idle timeout (the wait_timeout
+      throw err;                                  // server variable configures this)
+    }
+  });
+}
+
+handleDisconnect();
 
 module.exports = con

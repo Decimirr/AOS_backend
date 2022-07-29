@@ -26,6 +26,7 @@ app.use("/api/map", require("./api/map"));
 app.use("/api/auth", require("./api/auth"));
 app.use("/api/params", require("./api/params"));
 app.use("/api/chat", require("./api/chat"));
+app.use("/api/blob", require("./api/blob"));
 
 
 app.listen(port, function (){
