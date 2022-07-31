@@ -15,8 +15,17 @@ const config = {
   connectionLimit: 30,
 }
 
+//let con = mysql.createConnection(config)
 
-let con = mysql.createConnection(config)
+const pool = mysql.createPool(config)
+
+const getConnection = (callback) => {
+  pool.getConnection((err, con) => {
+    if (!err){
+      callback(con)
+    }
+  })
+}
 /*
 const con = mysql.createPool({
   host:"aos-database.mysql.database.azure.com",
@@ -32,7 +41,7 @@ const con = mysql.createPool({
   connectionLimit: 30,
 });
 */
-
+/*
 function handleDisconnect() {
   con = mysql.createConnection(config); // Recreate the connection, since
                                                   // the old one cannot be reused.
@@ -55,5 +64,6 @@ function handleDisconnect() {
 }
 
 handleDisconnect();
+*/
 
-module.exports = con
+module.exports = getConnection

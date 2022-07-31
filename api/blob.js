@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const util = require('../util');
-const con = require("../database");
+const getConnection = require("../database");
 const path = require("path");
 
 const ZIP_PATH = "./allFileTest.zip"
@@ -12,26 +12,26 @@ const options = {
 
 
 router.get('/all/:training_id', (req, res) => {
-  const sql = "SELECT mission_name, team_name, answer FROM answer_pending AS a JOIN (SELECT * FROM team WHERE training_id=?) AS b ON a.team_id=b._id JOIN mission AS c ON a.mission_id=c._id;"
-  const query_param = [req.params.training_id]
-  con.query(sql, query_param, async (err, result) => {
-    if (err) {
-      console.log(err)
-      res.json(util.successFalse(err, ""))
-    } else {
-      result.forEach(item => {
-        const words = item.answer.split('/')
-        item.answer = words[words.length - 1]
-        item.title = item.mission_name + " (" + item.team_name + ")." + item.answer.split('.').pop()
-      })
-      await downloadAllToZip(result)
-      res.sendFile(path.join(__dirname, "..", ZIP_PATH))
-
-      //downloadAllToZip(result).then(() => res.sendFile(path.join(__dirname, "..", ZIP_PATH), (err)=>{console.log(`sendFile Error ${err}`)}))
-      //  .catch((ex) => {console.log(ex.message); res.json(util.successFalse(ex, "err while packig files"))})
-    }
+  getConnection(con => {
+    const sql = "SELECT mission_name, team_name, answer FROM answer_pending AS a JOIN (SELECT * FROM team WHERE training_id=?) AS b ON a.team_id=b._id JOIN mission AS c ON a.mission_id=c._id;"
+    const query_param = [req.params.training_id]
+    con.query(sql, query_param, async (err, result) => {
+      if (err) {
+        console.log(err)
+        res.json(util.successFalse(err, ""))
+        con.release()
+      } else {
+        result.forEach(item => {
+          const words = item.answer.split('/')
+          item.answer = words[words.length - 1]
+          item.title = item.mission_name + " (" + item.team_name + ")." + item.answer.split('.').pop()
+        })
+        await downloadAllToZip(result)
+        res.sendFile(path.join(__dirname, "..", ZIP_PATH))
+        con.release()
+      }
+    })
   })
-  //downloadAllToZip().then(() => console.log('Done')).catch((ex) => console.log(ex.message));
 })
 
 module.exports = router
