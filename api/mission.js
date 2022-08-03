@@ -230,8 +230,41 @@ router.get('/problem-image/:id', (req, res) => {
         const sql = `SELECT image FROM mission_problem_image WHERE mission_id=?`
         const query_param = [req.params.id]
         con.query(sql, query_param, (err, result) =>  {
-            console.log(err)
-            console.log(result)
+            if (!result[0]){
+                res.json(util.successFalse("no file"))
+            }
+            else {
+                res.json(util.successTrue(result[0]))
+            }
+            con.release()
+        })
+    })
+
+})
+router.post("/problem-video/:id", uploads.upload_blob.single("problem_video"), (req, res) => {
+    getConnection(con => {
+        if (req.file == null)
+            return res.json(util.successFalse("No problem video provided", "No problem video provided"))
+        const sql = "INSERT INTO mission_problem_video SET ? ON DUPLICATE KEY UPDATE ?"
+        const query_param = [ { mission_id: req.params.id, video: req.file.url.split("?")[0] },  { video: req.file.url.split("?")[0] } ]
+        con.query(sql, query_param, (err, result) => {
+            if (err) {
+                console.log(err)
+                res.json(util.successFalse(err, "err with upload problem video"))
+            }
+            else res.json(util.successTrue(result[0]))
+            con.release()
+        })
+    })
+
+})
+
+
+router.get('/problem-video/:id', (req, res) => {
+    getConnection(con => {
+        const sql = `SELECT video FROM mission_problem_video WHERE mission_id=?`
+        const query_param = [req.params.id]
+        con.query(sql, query_param, (err, result) =>  {
             if (!result[0]){
                 res.json(util.successFalse("no file"))
             }
@@ -260,6 +293,7 @@ router.post("/problem-image/:id", uploads.upload_blob.single("problem_image"), (
     })
 
 })
+
 
 router.get("/location/:id", (req, res) => {
     getConnection(con => {

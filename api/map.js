@@ -54,7 +54,6 @@ router.get("/location-control/:training_id", (req, res)=>{
       if (err) { console.log(err); con.release(); return res.json(util.successFalse(err)) }
       else{
         const locations = session.getLocation(result)
-        console.log(locations)
         con.release()
         return res.json(util.successTrue(locations))
       }
