@@ -46,10 +46,28 @@ const isValidSession = (session_id) => {
 }
 
 const setLocation = (session_id, lat, lng) => {
-  if (session[session_id] == null) return
-  session[session_id].lat = lat
-  session[session_id].lng = lng
-  session[session_id].lastUpdate = Date.now()
+  for(const team_id in session){
+    session[team_id].forEach(s => {
+      if (s.id == session_id){
+        s.lat = lat
+        s.lng = lng
+        s.lastUpdate = Date.now()
+      }
+    })
+  }
 }
 
-module.exports = { createSession, isValidSession, setLocation }
+const getLocation = (teams) => {
+  const locations = []
+  teams.forEach((team, i) => {
+    if (session[team._id] != null){
+      if (session[team._id][0] != null){
+        const firstSession = session[team._id][0]
+        locations.push({team_id: team._id, team_name: team.team_name, index: i, lat: firstSession.lat, lng: firstSession.lng})
+      }
+    }
+  })
+  return locations
+}
+
+module.exports = { createSession, isValidSession, setLocation, getLocation }
