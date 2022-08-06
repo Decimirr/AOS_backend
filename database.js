@@ -2,7 +2,7 @@ const mysql = require('mysql')
 const fs = require('fs')
 
 const config = {
-  host:"aos-database.mysql.database.azure.com",
+  host:"aos-restore-220804.mysql.database.azure.com",
   user:"Decimirr",
   password:process.env.database_password,
   database:'aos',
