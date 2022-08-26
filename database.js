@@ -2,7 +2,7 @@ const mysql = require('mysql')
 const fs = require('fs')
 
 const config = {
-  host:"aos-restore-220804.mysql.database.azure.com",
+  host:"aos-database.mysql.database.azure.com",
   user:"Decimirr",
   password:process.env.database_password,
   database:'aos',
@@ -12,7 +12,7 @@ const config = {
   connectTimeout  : 30 * 24 * 60 * 60 * 1000,
   acquireTimeout  : 60 * 60 * 1000,
   timeout         : 60 * 60 * 1000,
-  connectionLimit: 30,
+  connectionLimit: 50,
 }
 
 //let con = mysql.createConnection(config)

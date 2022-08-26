@@ -3,9 +3,6 @@ const router = express.Router();
 const getConnection = require('../database')
 const util = require("../util");
 const uploads = require('../uploads')
-const {successTrue} = require("../util");
-const fs = require("fs");
-
 
 
 router.get('/:id', (req, res) => {
@@ -38,8 +35,7 @@ router.get('/by-training/:training_id', (req, res) => {
 })
 router.post('/:id', (req, res) => {
     getConnection(con => {
-        const required_keys = ["mission_name", "is_manned", "answer_type", "prerequisites", "location"]
-        const allowed_keys = ["problem", ]
+        const required_keys = ["mission_name", "is_manned", "content", "prerequisites"]
         const query_param = {}
         for (const key of required_keys){
             if (req.body[key] == null){
@@ -49,14 +45,15 @@ router.post('/:id', (req, res) => {
             else
                 query_param[key] = req.body[key]
         }
-        for (const key of allowed_keys){
-            query_param[key] = req.body[key]
-        }
         query_param["training_id"] = req.params.id
+
         const sql = "INSERT INTO mission SET position=(SELECT IFNULL(MAX(position) + 1, 1) FROM mission b), ?"
         con.query(sql, query_param, (err, result, field) => {
             con.release()
-            if (err) res.json(util.successFalse(err, "err with post mission"))
+            if (err) {
+                console.log(err)
+                res.json(util.successFalse(err, "err with post mission"))
+            }
             else res.json(util.successTrue({_id: result.insertId}))
         })
     })
@@ -64,7 +61,7 @@ router.post('/:id', (req, res) => {
 })
 router.put('/:id', (req, res) => {
     getConnection(con => {
-        const allowed_keys = ["mission_name", "is_manned", "problem", "answer_type", "prerequisites", "position", "location"]
+        const allowed_keys = ["mission_name", "is_manned", "prerequisites", "position", "content"]
         const errs = []
         for (const key in req.body){
             if (allowed_keys.includes(key)){
@@ -101,6 +98,42 @@ router.delete('/:id', (req, res) => {
 })
 
 
+router.get('/prerequisites/:team_id', (req, res) => {
+    const team_id = req.params.team_id
+    const pre_status = {}
+
+    getConnection(con => {
+        con.query("SELECT training_id FROM team WHERE _id=?", [team_id], (err, result) => {
+            if (err || !result[0]) {con.release(); return res.json(util.successFalse(err)) }
+            const training_id = result[0].training_id
+
+            con.query("SELECT A._id, mission_name, status FROM (SELECT * FROM mission WHERE training_id=?) A LEFT OUTER JOIN (SELECT * FROM scoreboard WHERE team_id=? and status='correct') B ON A._id=B.mission_id;", [training_id, team_id], (err, result) => {
+                if (err) {con.release(); return res.json(util.successFalse(err)) }
+
+                const mission_personal = {}
+                for (const item of result){
+                    mission_personal[item._id] = { mission_name: item.mission_name, is_correct: item.status==='correct' }
+                }
+
+                con.query("SELECT _id AS mission_id, prerequisites FROM mission WHERE training_id=?;", [training_id], (err, result) => {
+                    if (err) {con.release(); return res.json(util.successFalse(err)) }
+
+                    const mission_pre = {}
+                    for (const item of result){
+                        mission_pre[item.mission_id] = JSON.parse(item.prerequisites).mission
+                        pre_status[item.mission_id] = mission_pre[item.mission_id].every((id) => mission_personal[id] == null || mission_personal[id].is_correct )
+                    }
+                    console.log('pre_status', pre_status)
+                    con.release();
+                    return res.json(util.successTrue(pre_status))
+
+                })
+            })
+        })
+    })
+})
+
+/*
 router.get('/text-answer/:id', (req, res) => {
     getConnection(con => {
         const sql = "SELECT * FROM mission_text_answer WHERE mission_id=?"
@@ -360,5 +393,6 @@ router.put('/location/:id', (req, res) => {
     })
 
 })
+*/
 
 module.exports = router

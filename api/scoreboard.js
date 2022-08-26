@@ -48,7 +48,21 @@ router.get('/by-team/:team_id', (req, res) => {
     })
 
 })
+router.get('/one/:mission_id/:team_id', (req, res) => {
+    getConnection(con => {
+        const sql = "SELECT * FROM scoreboard WhERE mission_id=? and team_id=?"
+        const query_param = [req.params.mission_id, req.params.team_id]
+        con.query(sql, query_param, (err, result) => {
+            if (err) res.json(util.successFalse(err))
+            else res.json(util.successTrue(result[0]))
+            con.release()
+        })
+    })
+
+})
+
 router.get('/total-score/:training_id', (req, res) => {
+    console.log("GET totalscore")
     getConnection(con => {
         const sql = "SELECT B.team_id, SUM(B.score) as total_score FROM (SELECT * FROM mission WHERE training_id=?) A INNER JOIN (SELECT * FROM scoreboard WHERE status='correct') B ON A._id=B.mission_id GROUP BY team_id;"
         const query_param = [req.params.training_id]
@@ -62,16 +76,69 @@ router.get('/total-score/:training_id', (req, res) => {
 })
 // for special purpose
 router.get('/teams-cleared/:training_id', (req, res) => {
+    console.log("GET scoreboard")
     getConnection(con => {
-        const sql = "SELECT mission_id, COUNT(*) AS num, (SELECT COUNT(*) FROM team WHERE training_id=?) AS total FROM (scoreboard JOIN (SELECT * FROM mission WHERE training_id=?) t1 ON (scoreboard.mission_id = t1._id)) WHERE status='correct' GROUP BY  mission_id;"
+        const sql = "SELECT mission_id, COUNT(*) AS num, (SELECT COUNT(*) FROM team WHERE training_id=?) AS total FROM (scoreboard JOIN (SELECT * FROM mission WHERE training_id=?) t1 ON (scoreboard.mission_id = t1._id)) WHERE status='correct' GROUP BY mission_id;"
         const query_param = [req.params.training_id, req.params.training_id]
         con.query(sql, query_param, (err, result)=>{
+            console.log(result)
             if (err) res.json(util.successFalse(err))
             else res.json(util.successTrue(result))
             con.release()
         })
     })
 
+})
+
+router.post('/submit', (req, res) => {
+    getConnection(con => {
+        const required_keys = ["mission_id", "team_id", "answer"]
+        for (const key of required_keys){
+            if (req.body[key] == null) {
+                con.release()
+                return res.json(util.successFalse("KeyNotExist", key + " is not exist"))
+            }
+        }
+
+        const sql1 = "SELECT * FROM scoreboard WHERE mission_id=? and team_id=?"
+        const param1 = [req.body.mission_id, req.body.team_id]
+        con.query(sql1, param1, (err, result) => {
+            if (err) { con.release(); console.log(err); return res.json(util.successFalse(err, "problem with fetching scoreboard")) }
+            if (result[0]?.status === 'correct') { con.release(); return res.json(util.successTrue(err, "이미 정답처리된 미션입니다.")) }
+
+            const scoreboard = result[0]
+
+            if (scoreboard == null) {
+                const sql2 = "INSERT INTO scoreboard SET ?"
+                const param2 = {
+                    mission_id: req.body.mission_id,
+                    team_id: req.body.team_id,
+                    score: 0,
+                    status: "pending",
+                    answer: req.body.answer,
+                }
+                con.query(sql2, param2, (err, result) => {
+                    con.release()
+                    if (err) { console.log(err); return res.json(util.successFalse(err, "problem with creating scoreboard"));}
+                    return res.json(util.successTrue(param2))
+                })
+            }
+            else{
+                const sql3 = "UPDATE scoreboard SET ? WHERE mission_id=? and team_id=?"
+                const param3 = [
+                    { status: "pending", answer: req.body.answer },
+                    req.body.mission_id,
+                    req.body.team_id,
+                ]
+                con.query(sql3, param3, (err, result) => {
+                    con.release()
+                    if (err) return res.json(util.successFalse(err, "problem with updating scoreboard"))
+                    return res.json(util.successTrue(null))
+                })
+            }
+
+        })
+    })
 })
 
 router.post('/submit/text', (req, res) => {

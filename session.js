@@ -41,7 +41,10 @@ const isValidSession = (session_id) => {
     const s2 = session[curr_team][1]
     if (util.calcCrow(s1.lat, s1.lng, s2.lat, s2.lng) < 30) return true
     else if (Math.min(s1.id, s2.id) == session_id) return true
-    else throw "다른 팀원과 너무 멀리 떨어져 연결이 해제되었습니다."
+    else {
+      session[curr_team].splice(1, 1)
+      throw "다른 팀원과 너무 멀리 떨어졌습니다. 연결이 해제됩니다."
+    }
   }
 }
 

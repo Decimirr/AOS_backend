@@ -3,12 +3,25 @@ const router = express.Router();
 const util = require('../util');
 const getConnection = require("../database");
 const path = require("path");
+const uploads = require("../uploads");
 
 const ZIP_PATH = "./allFileTest.zip"
 
-const options = {
-  root: path.join(__dirname, ".."),
-}
+
+
+router.post("/", uploads.upload_blob.single("file"), (req, res) => {
+  req.file.url = req.file.url.split("?")[0]
+  console.log(req.file)
+  res.json(util.successTrue(req.file))
+})
+
+router.post("/multiple", uploads.upload_blob.array("files"), (req, res) => {
+  console.log(req.body.files)
+  console.log(req.files)
+  const result = req.files.map((file) => file.url.split("?")[0])
+  console.log(result)
+  res.json(util.successTrue(result))
+})
 
 
 router.get('/all/:training_id', (req, res) => {
