@@ -198,6 +198,7 @@ router.post('/submit/text', (req, res) => {
     })
 
 })
+/*
 router.post("/submit/image", uploads.upload_blob.single("answer_image"), (req, res) => {
     getConnection(con => {
         if (req.file == null){
@@ -241,7 +242,7 @@ router.post("/submit/image", uploads.upload_blob.single("answer_image"), (req, r
     })
 
 })
-
+*/
 
 router.post('/check', (req, res) => {
     getConnection(con => {
@@ -265,6 +266,7 @@ router.post('/check', (req, res) => {
     })
 
 })
+/*
 router.get("/answer-pending/:mission_id/:team_id", (req, res) => {
     getConnection(con => {
         const sql = "SELECT * FROM answer_pending WHERE mission_id=? and team_id=?"
@@ -282,7 +284,7 @@ router.get("/answer-pending/:mission_id/:team_id", (req, res) => {
     })
 
 })
-
+*/
 router.delete("/:mission_id/:team_id", (req, res) => {
     getConnection(con => {
         const sql = "DELETE FROM scoreboard WHERE mission_id=? and team_id=?"
