@@ -198,51 +198,7 @@ router.post('/submit/text', (req, res) => {
     })
 
 })
-/*
-router.post("/submit/image", uploads.upload_blob.single("answer_image"), (req, res) => {
-    getConnection(con => {
-        if (req.file == null){
-            con.release()
-            return res.json(util.successFalse("No answer image provided", "No answer image provided"))
-        }
-        const required_keys = ["mission_id", "team_id"]
-        for (const key of required_keys){
-            if (req.body[key] == null) {
-                con.release()
-                return res.json(util.successFalse("KeyNotExist", key + " is not exist"))
-            }
-        }
 
-        const sql1 = "INSERT INTO answer_pending SET ? ON DUPLICATE KEY UPDATE ?;"
-        const sql2 = "INSERT INTO scoreboard SET ? ON DUPLICATE KEY UPDATE ?;"
-
-        console.log(req.file.url.split("?")[0])
-        const query_param = [
-            {
-                mission_id: req.body.mission_id,
-                team_id: req.body.team_id,
-                answer: req.file.url.split("?")[0],
-            },
-            { answer: req.file.url.split("?")[0] },
-            {
-                mission_id: req.body.mission_id,
-                team_id: req.body.team_id,
-                status: "pending",
-            },
-            { status: "pending" }
-        ]
-        con.query(sql1 + sql2, query_param, (err, result) => {
-            con.release()
-            if (err) {
-                console.log(err)
-                res.json(util.successFalse(err, "error while submitting image for answer"))
-            }
-            else res.json(util.successTrue(result))
-        })
-    })
-
-})
-*/
 
 router.post('/check', (req, res) => {
     getConnection(con => {
@@ -266,29 +222,11 @@ router.post('/check', (req, res) => {
     })
 
 })
-/*
-router.get("/answer-pending/:mission_id/:team_id", (req, res) => {
-    getConnection(con => {
-        const sql = "SELECT * FROM answer_pending WHERE mission_id=? and team_id=?"
-        const query_param = [req.params.mission_id, req.params.team_id]
-        con.query(sql, query_param, (err, result) => {
-            con.release()
-            if (err || result.length===0){
-                console.log(err)
-                res.json(util.successFalse(err, "error getting answer-pending"))
-            }
-            else{
-                res.json(util.successTrue(result[0]))
-            }
-        })
-    })
 
-})
-*/
 router.delete("/:mission_id/:team_id", (req, res) => {
     getConnection(con => {
-        const sql = "DELETE FROM scoreboard WHERE mission_id=? and team_id=?"
-        const query_param = [req.params.mission_id, req.params.team_id]
+        const sql = "DELETE FROM scoreboard WHERE mission_id=? and team_id=?; DELETE FROM started_time WHERE mission_id=? and team_id=?;"
+        const query_param = [req.params.mission_id, req.params.team_id, req.params.mission_id, req.params.team_id]
         con.query(sql, query_param, (err, result) => {
             con.release()
             if (err) { console.log(err); res.json(util.successFalse(err)); }

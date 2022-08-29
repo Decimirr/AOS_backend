@@ -1,5 +1,4 @@
-const con = require('./database')
-const util = require("util");
+const getConnection = require('./database')
 
 
 const successTrue = function (data) {
@@ -48,5 +47,33 @@ function toRad(Value)
 {
     return Value * Math.PI / 180;
 }
+
+
+function getTeams(training_id){
+
+}
+
+async function getClearedTeamSummary(training_id){
+    return new Promise((resolve, reject) => {
+        getConnection(con => {
+            const sql = "SELECT mission_id, COUNT(*) AS num, (SELECT COUNT(*) FROM team WHERE training_id=?) AS total FROM (scoreboard JOIN (SELECT * FROM mission WHERE training_id=?) t1 ON (scoreboard.mission_id = t1._id)) WHERE status='correct' GROUP BY mission_id;"
+            const query_param = [training_id, training_id]
+            con.query(sql, query_param, (err, result)=>{
+                console.log(result)
+                if (err) reject(err)
+                else resolve(result)
+                con.release()
+            })
+        })
+    })
+
+}
+
+
+
+const isValidMission = (req, res, next) => {
+
+}
+
 
 module.exports = { successTrue, successFalse, toCharHelper, calcCrow }

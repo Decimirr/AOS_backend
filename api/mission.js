@@ -118,281 +118,79 @@ router.get('/prerequisites/:team_id', (req, res) => {
                 con.query("SELECT _id AS mission_id, prerequisites FROM mission WHERE training_id=?;", [training_id], (err, result) => {
                     if (err) {con.release(); return res.json(util.successFalse(err)) }
 
-                    const mission_pre = {}
+                    const pre = {}
                     for (const item of result){
-                        mission_pre[item.mission_id] = JSON.parse(item.prerequisites).mission
-                        pre_status[item.mission_id] = mission_pre[item.mission_id].every((id) => mission_personal[id] == null || mission_personal[id].is_correct )
+                        pre[item.mission_id] = JSON.parse(item.prerequisites)
+                        console.log(pre)
+                        pre_status[item.mission_id] = pre[item.mission_id].mission.every((id) => mission_personal[id] == null || mission_personal[id].is_correct )
+                        pre_status[item.mission_id] &&= ( pre[item.mission_id].start_time == null || new Date(pre[item.mission_id].start_time) < new Date() )
+                        pre_status[item.mission_id] &&= ( pre[item.mission_id].end_time == null || new Date(pre[item.mission_id].end_time) > new Date() )
                     }
                     console.log('pre_status', pre_status)
                     con.release();
                     return res.json(util.successTrue(pre_status))
-
                 })
             })
         })
     })
 })
+router.get("/timer/:team_id", (req, res) => {
+    const team_id = req.params.team_id
 
-/*
-router.get('/text-answer/:id', (req, res) => {
     getConnection(con => {
-        const sql = "SELECT * FROM mission_text_answer WHERE mission_id=?"
-        const query_param = [req.params.id]
-
-        con.query(sql, query_param, (err, result) => {
-            if (err) res.json(util.successFalse(err));
-            else res.json(util.successTrue(result[0]))
-            con.release()
-        })
-    })
-
-})
-router.post("/text-answer/:id", (req, res) => {
-    getConnection(con => {
-        const required_keys = ["answer", "base_score", "decr_score", "min_score"]
-        const query_param = {}
-        for (const key of required_keys){
-            if (req.body[key] == null) {
-                con.release()
-                return res.json(util.successFalse("KeyNotExist", key + " is not exist"))
+        con.query("SELECT training_id FROM team WHERE _id=?", [team_id], (err, result) => {
+            if (err || !result[0]) {
+                con.release();
+                return res.json(util.successFalse(err))
             }
-            else
-                query_param[key] = req.body[key]
-        }
-        query_param["mission_id"] = req.params.id
-        const sql = "INSERT INTO mission_text_answer SET ?"
-        console.log(query_param)
-        con.query(sql, query_param, (err, result) => {
-            if (err) res.json(util.successFalse(err, "err with post mission_text_answer"))
-            else res.json(util.successTrue(result[0]))
-            con.release()
-        })
-    })
+            const training_id = result[0].training_id
 
-})
-router.put('/text-answer/:id', (req, res) => {
-    getConnection(con => {
-        const allowed_keys = ["answer", "base_score", "decr_score", "min_score"]
-        const errs = []
-        for (const key in req.body){
-            if (allowed_keys.includes(key)){
-                const sql = `UPDATE mission_text_answer SET ${key}=? WHERE mission_id=?`
-                const query_param = [req.body[key], req.params.id]
-                con.query(sql, query_param, function (err, result, fields){
-                    if (err || !result) {
-                        console.log(err)
-                        errs.push(err)
+            con.query("SELECT _id, prerequisites FROM mission WHERE training_id=?", [training_id], (err, result) => {
+                if (err) { con.release(); return res.json(util.successFalse(err)) }
+                const pre_timer = {}
+                for (const item of result){
+                    pre_timer[item._id] = JSON.parse(item.prerequisites).timer
+                }
+
+                con.query("SELECT * FROM started_time WHERE team_id=?", [team_id], (err, result) => {
+                    const started_time = {}
+                    for (const item of result) {
+                        started_time[item.mission_id] = new Date(item.time).setHours(item.time.getHours()+9)
                     }
-                })
-            }
-        }
-        if (errs.length !== 0)
-            return res.json(util.successFalse(errs))
-        else
-            res.json(util.successTrue({}))
-        con.release()
-    })
 
-})
+                    const result_data = {}
+                    console.log(pre_timer)
+                    for (const mission_id in pre_timer){
+                        if (pre_timer[mission_id] == null || pre_timer[mission_id] === 0)
+                            result_data[mission_id] = null
+                        else if (started_time[mission_id] == null)
+                            result_data[mission_id] = { started: false }
+                        else{
+                            console.log(new Date())
+                            console.log(new Date(started_time[mission_id]))
+                            console.log(new Date().getTime() - new Date(started_time[mission_id]).getTime())
 
+                            result_data[mission_id] = { started: true, remaining: (started_time[mission_id] + pre_timer[mission_id] * 1000 - new Date().getTime()) / 1000 }
+                        }
 
-router.get('/gps-answer/:id', (req, res) => {
-    getConnection(con => {
-        const sql = "SELECT * FROM mission_gps_answer WHERE mission_id=?"
-        const query_param = [req.params.id]
-
-        con.query(sql, query_param, (err, result) => {
-            if (err) res.json(util.successFalse(err));
-            else res.json(util.successTrue(result[0]))
-        })
-    })
-
-})
-router.post("/gps-answer/:id", (req, res) => {
-    getConnection(con => {
-        const required_keys = ["lat", "lng", "base_score"]
-        const query_param = {}
-        for (const key of required_keys){
-            if (req.body[key] == null){
-                con.release()
-                return res.json(util.successFalse("KeyNotExist", key + " is not exist"))
-            }
-            else
-                query_param[key] = req.body[key]
-        }
-        query_param["mission_id"] = req.params.id
-        const sql = "INSERT INTO mission_gps_answer SET ?"
-        console.log(query_param)
-        con.query(sql, query_param, (err, result) => {
-            if (err) res.json(util.successFalse(err, "err with post mission_gps_answer"))
-            else res.json(util.successTrue(result[0]))
-            con.release()
-        })
-    })
-
-})
-router.put('/gps-answer/:id', (req, res) => {
-    getConnection(con => {
-        const allowed_keys = ["lat", "lng", "base_score"]
-        const errs = []
-        for (const key in req.body){
-            if (allowed_keys.includes(key)){
-                const sql = `UPDATE mission_gps_answer SET ${key}=? WHERE mission_id=?`
-                const query_param = [req.body[key], req.params.id]
-                con.query(sql, query_param, function (err, result, fields){
-                    if (err || !result) {
-                        console.log(err)
-                        errs.push(err)
                     }
+
+                    return res.json(util.successTrue(result_data))
                 })
-            }
-        }
-        if (errs.length !== 0)
-            return res.json(util.successFalse(errs))
-        else
-            res.json(util.successTrue({}))
-        con.release()
-    })
-
-})
-
-
-
-router.get('/problem-image/:id', (req, res) => {
-    getConnection(con => {
-        const sql = `SELECT image FROM mission_problem_image WHERE mission_id=?`
-        const query_param = [req.params.id]
-        con.query(sql, query_param, (err, result) =>  {
-            if (!result[0]){
-                res.json(util.successFalse("no file"))
-            }
-            else {
-                res.json(util.successTrue(result[0]))
-            }
-            con.release()
+            })
         })
     })
-
 })
-router.post("/problem-video/:id", uploads.upload_blob.single("problem_video"), (req, res) => {
+router.post('/start-timer/:mission_id/:team_id', (req, res) => {
+    const team_id = req.params.team_id
+    const mission_id = req.params.mission_id
     getConnection(con => {
-        if (req.file == null)
-            return res.json(util.successFalse("No problem video provided", "No problem video provided"))
-        const sql = "INSERT INTO mission_problem_video SET ? ON DUPLICATE KEY UPDATE ?"
-        const query_param = [ { mission_id: req.params.id, video: req.file.url.split("?")[0] },  { video: req.file.url.split("?")[0] } ]
-        con.query(sql, query_param, (err, result) => {
-            if (err) {
-                console.log(err)
-                res.json(util.successFalse(err, "err with upload problem video"))
-            }
-            else res.json(util.successTrue(result[0]))
-            con.release()
+        con.query("INSERT INTO started_time SET ?", { team_id: team_id, mission_id: mission_id }, (err, result) => {
+            console.log('start-timer', err)
+            if (err) { console.log(err); return res.json(util.successFalse(err))}
+            return res.json(util.successTrue(null))
         })
     })
-
 })
-
-
-router.get('/problem-video/:id', (req, res) => {
-    getConnection(con => {
-        const sql = `SELECT video FROM mission_problem_video WHERE mission_id=?`
-        const query_param = [req.params.id]
-        con.query(sql, query_param, (err, result) =>  {
-            if (!result[0]){
-                res.json(util.successFalse("no file"))
-            }
-            else {
-                res.json(util.successTrue(result[0]))
-            }
-            con.release()
-        })
-    })
-
-})
-router.post("/problem-image/:id", uploads.upload_blob.single("problem_image"), (req, res) => {
-    getConnection(con => {
-        if (req.file == null)
-            return res.json(util.successFalse("No problem image provided", "No problem image provided"))
-        const sql = "INSERT INTO mission_problem_image SET ? ON DUPLICATE KEY UPDATE ?"
-        const query_param = [ { mission_id: req.params.id, image: req.file.url.split("?")[0] },  { image: req.file.url.split("?")[0] } ]
-        con.query(sql, query_param, (err, result) => {
-            if (err) {
-                console.log(err)
-                res.json(util.successFalse(err, "err with upload problem image"))
-            }
-            else res.json(util.successTrue(result[0]))
-            con.release()
-        })
-    })
-
-})
-
-
-router.get("/location/:id", (req, res) => {
-    getConnection(con => {
-        const sql = "SELECT * FROM mission_location WHERE mission_id=?"
-        const query_param = [req.params.id]
-        con.query(sql, query_param, (err, result) => {
-            if (err) {
-                console.log(err)
-                res.json(util.successFalse(err, "err with getting location"))
-            }
-            else res.json(util.successTrue(result[0]))
-            con.release()
-        })
-    })
-
-})
-router.post("/location/:id", (req, res) => {
-    getConnection(con => {
-        const required_keys = ["lat", "lng"]
-        const param = {}
-        for (const key of required_keys){
-            if (req.body[key] == null) {
-                con.release()
-                return res.json(util.successFalse("KeyNotExist", key + " is not exist"))
-            }
-            else
-                param[key] = req.body[key]
-        }
-        param["mission_id"] = req.params.id
-
-        const sql = "INSERT INTO mission_location SET ? ON DUPLICATE KEY UPDATE ?"
-        const query_param = [param, param]
-
-        console.log(param)
-        con.query(sql, query_param, (err, result) => {
-            if (err) res.json(util.successFalse(err, "err with post mission_location"))
-            else res.json(util.successTrue(result[0]))
-            con.release()
-        })
-    })
-
-})
-router.put('/location/:id', (req, res) => {
-    getConnection(con => {
-        const allowed_keys = ["lat", "lng"]
-        const errs = []
-        for (const key in req.body){
-            if (allowed_keys.includes(key)){
-                const sql = `UPDATE mission_location SET ${key}=? WHERE mission_id=?`
-                const query_param = [req.body[key], req.params.id]
-                con.query(sql, query_param, function (err, result, fields){
-                    if (err || !result) {
-                        console.log(err)
-                        errs.push(err)
-                    }
-                })
-            }
-        }
-        if (errs.length !== 0)
-            res.json(util.successFalse(errs))
-        else
-            res.json(util.successTrue({}))
-        con.release()
-    })
-
-})
-*/
 
 module.exports = router
