@@ -161,7 +161,8 @@ router.get("/timer/:team_id", (req, res) => {
                     const result_data = {}
                     console.log(pre_timer)
                     for (const mission_id in pre_timer){
-                        if (pre_timer[mission_id] == null || pre_timer[mission_id] === 0)
+                        console.log(pre_timer[mission_id])
+                        if (pre_timer[mission_id] == null || pre_timer[mission_id] === 0 || pre_timer[mission_id] === '')
                             result_data[mission_id] = null
                         else if (started_time[mission_id] == null)
                             result_data[mission_id] = { started: false }
