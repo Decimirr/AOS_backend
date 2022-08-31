@@ -19,10 +19,12 @@ const config = {
 
 const pool = mysql.createPool(config)
 
+
 const getConnection = (callback) => {
   pool.getConnection((err, con) => {
     if (!err){
       callback(con)
+      con.release()
     }
   })
 }

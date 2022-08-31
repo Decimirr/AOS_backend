@@ -8,7 +8,7 @@ router.post("/", (req, res) => {
     const required_keys = ["paramName"]
     for (const key of required_keys){
       if (req.body[key] == null){
-        con.release()
+        
         return res.json(util.successFalse("KeyNotExist", key + " is not exist"))
       }
     }
@@ -16,7 +16,7 @@ router.post("/", (req, res) => {
     const sql = `SELECT * FROM params WHERE paramName=?`
     const query_param = [req.body["paramName"]]
     con.query(sql, query_param, (err, result) => {
-      con.release()
+      
       if (err) res.json(util.successFalse(err, "err with get params"))
       else res.json(util.successTrue(result[0].paramValue))
     })
@@ -29,7 +29,7 @@ router.put('/', (req, res) => {
     const required_keys = ["paramName", "paramValue"]
     for (const key of required_keys){
       if (req.body[key] == null){
-        con.release()
+        
         return res.json(util.successFalse("KeyNotExist", key + " is not exist"))
       }
     }
@@ -37,7 +37,7 @@ router.put('/', (req, res) => {
     const sql = `UPDATE params SET paramValue=? WHERE paramName=?`
     const query_param = [ req.body["paramValue"], req.body["paramName"] ]
     con.query(sql, query_param, (err, result) => {
-      con.release()
+      
       if (err) res.json(util.successFalse(err, "err with post params"))
       else res.json(util.successTrue())
     })

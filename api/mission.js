@@ -11,7 +11,7 @@ router.get('/:id', (req, res) => {
         const query_param = [req.params.id]
 
         con.query(sql, query_param, function (err, result) {
-            con.release()
+            
             if (err || !result) res.json(util.successFalse(err));
             else res.json(util.successTrue(result[0]))
         })
@@ -24,7 +24,7 @@ router.get('/by-training/:training_id', (req, res) => {
         const query_param = [req.params.training_id]
 
         con.query(sql, query_param, function (err, result, fields) {
-            con.release()
+            
             if (err || !result) res.json(util.successFalse(err));
             else {
                 res.json(util.successTrue(result))
@@ -39,7 +39,7 @@ router.post('/:id', (req, res) => {
         const query_param = {}
         for (const key of required_keys){
             if (req.body[key] == null){
-                con.release()
+                
                 return res.json(util.successFalse("KeyNotExist", key + " is not exist"))
             }
             else
@@ -49,7 +49,7 @@ router.post('/:id', (req, res) => {
 
         const sql = "INSERT INTO mission SET position=(SELECT IFNULL(MAX(position) + 1, 1) FROM mission b), ?"
         con.query(sql, query_param, (err, result, field) => {
-            con.release()
+            
             if (err) {
                 console.log(err)
                 res.json(util.successFalse(err, "err with post mission"))
@@ -79,7 +79,7 @@ router.put('/:id', (req, res) => {
             res.json(util.successFalse(errs))
         else
             res.json(util.successTrue({}))
-        con.release()
+        
     })
 
 })
@@ -91,7 +91,7 @@ router.delete('/:id', (req, res) => {
         con.query(sql, query_param, function (err, result, fields){
             if (err || !result) res.json(util.successFalse(err));
             else res.json(util.successTrue(result))
-            con.release()
+            
         })
     })
 
@@ -104,11 +104,11 @@ router.get('/prerequisites/:team_id', (req, res) => {
 
     getConnection(con => {
         con.query("SELECT training_id FROM team WHERE _id=?", [team_id], (err, result) => {
-            if (err || !result[0]) {con.release(); return res.json(util.successFalse(err)) }
+            if (err || !result[0]) {; return res.json(util.successFalse(err)) }
             const training_id = result[0].training_id
 
             con.query("SELECT A._id, mission_name, status FROM (SELECT * FROM mission WHERE training_id=?) A LEFT OUTER JOIN (SELECT * FROM scoreboard WHERE team_id=? and status='correct') B ON A._id=B.mission_id;", [training_id, team_id], (err, result) => {
-                if (err) {con.release(); return res.json(util.successFalse(err)) }
+                if (err) {; return res.json(util.successFalse(err)) }
 
                 const mission_personal = {}
                 for (const item of result){
@@ -116,8 +116,8 @@ router.get('/prerequisites/:team_id', (req, res) => {
                 }
 
                 con.query("SELECT _id AS mission_id, prerequisites FROM mission WHERE training_id=?;", [training_id], (err, result) => {
-                    if (err) {con.release(); return res.json(util.successFalse(err)) }
-
+                    if (err) {; return res.json(util.successFalse(err)) }
+                    ;
                     const pre = {}
                     for (const item of result){
                         pre[item.mission_id] = JSON.parse(item.prerequisites)
@@ -127,7 +127,7 @@ router.get('/prerequisites/:team_id', (req, res) => {
                         pre_status[item.mission_id] &&= ( pre[item.mission_id].end_time == null || new Date(pre[item.mission_id].end_time) > new Date() )
                     }
                     console.log('pre_status', pre_status)
-                    con.release();
+
                     return res.json(util.successTrue(pre_status))
                 })
             })
@@ -140,19 +140,19 @@ router.get("/timer/:team_id", (req, res) => {
     getConnection(con => {
         con.query("SELECT training_id FROM team WHERE _id=?", [team_id], (err, result) => {
             if (err || !result[0]) {
-                con.release();
                 return res.json(util.successFalse(err))
             }
             const training_id = result[0].training_id
 
             con.query("SELECT _id, prerequisites FROM mission WHERE training_id=?", [training_id], (err, result) => {
-                if (err) { con.release(); return res.json(util.successFalse(err)) }
+                if (err) { return res.json(util.successFalse(err)) }
                 const pre_timer = {}
                 for (const item of result){
                     pre_timer[item._id] = JSON.parse(item.prerequisites).timer
                 }
 
                 con.query("SELECT * FROM started_time WHERE team_id=?", [team_id], (err, result) => {
+                    
                     const started_time = {}
                     for (const item of result) {
                         started_time[item.mission_id] = new Date(item.time).setHours(item.time.getHours()+9)
@@ -171,7 +171,24 @@ router.get("/timer/:team_id", (req, res) => {
                             console.log(new Date(started_time[mission_id]))
                             console.log(new Date().getTime() - new Date(started_time[mission_id]).getTime())
 
-                            result_data[mission_id] = { started: true, remaining: (started_time[mission_id] + pre_timer[mission_id] * 1000 - new Date().getTime()) / 1000 }
+                            const remain = (started_time[mission_id] + pre_timer[mission_id] * 1000 - new Date().getTime()) / 1000
+                            result_data[mission_id] = { started: true, remaining: remain }
+
+                            if (remain < 0){
+                                const insert_data = {
+                                    mission_id: mission_id,
+                                    team_id: team_id,
+                                    score: 0,
+                                    status: "timeover",
+                                }
+                                const update_data = {
+                                    score: 0,
+                                    status: "timeover",
+                                }
+                                con.query("INSERT INTO scoreboard SET ? ON DUPLICATE KEY UPDATE ?", [insert_data, update_data], (err, result) => {
+
+                                })
+                            }
                         }
 
                     }
@@ -187,6 +204,7 @@ router.post('/start-timer/:mission_id/:team_id', (req, res) => {
     const mission_id = req.params.mission_id
     getConnection(con => {
         con.query("INSERT INTO started_time SET ?", { team_id: team_id, mission_id: mission_id }, (err, result) => {
+            
             console.log('start-timer', err)
             if (err) { console.log(err); return res.json(util.successFalse(err))}
             return res.json(util.successTrue(null))

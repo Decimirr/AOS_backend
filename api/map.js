@@ -10,7 +10,7 @@ router.get("/marker/:training_id", (req, res) => {
     const sql = "SELECT * FROM marker WHERE training_id=?"
     const query_param = [req.params.training_id]
     con.query(sql, query_param, (err, result) => {
-      con.release()
+      
       if (err) { console.log(err); return res.json(util.successFalse(err)) }
       else if (result.length === 0) return res.json(util.successTrue({training_id: req.params.training_id, markers: JSON.stringify([])}))
       else return res.json(util.successTrue(result[0]))
@@ -24,7 +24,7 @@ router.post("/marker/:training_id", (req, res) => {
     const update_data = {}
     for (const key of allowed_keys){
       if (req.body[key] == null) {
-        con.release()
+        
         return res.json(util.successFalse("KeyNotExist", key + " is not exist"))
       }
       else
@@ -36,7 +36,7 @@ router.post("/marker/:training_id", (req, res) => {
     const sql = "INSERT INTO marker SET ? ON DUPLICATE KEY UPDATE ?"
     const query_param = [ new_data,  update_data ]
     con.query(sql, query_param, (err, result) => {
-      con.release()
+      
       if (err) { console.log(err); return res.json(util.successFalse(err)) }
       else return res.json(util.successTrue())
     })
@@ -51,10 +51,10 @@ router.get("/location-control/:training_id", (req, res)=>{
     const sql = "SELECT * FROM team WHERE training_id=?;"
     const query_param = [req.params.training_id]
     con.query(sql, query_param, (err, result, field) => {
-      if (err) { console.log(err); con.release(); return res.json(util.successFalse(err)) }
+      if (err) { console.log(err); ; return res.json(util.successFalse(err)) }
       else{
         const locations = session.getLocation(result)
-        con.release()
+        
         return res.json(util.successTrue(locations))
       }
     })

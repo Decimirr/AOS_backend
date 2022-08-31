@@ -32,7 +32,7 @@ router.get('/all/:training_id', (req, res) => {
       if (err) {
         console.log(err)
         res.json(util.successFalse(err, ""))
-        con.release()
+        
       } else {
         result.forEach(item => {
           const words = item.answer.split('/')
@@ -41,7 +41,7 @@ router.get('/all/:training_id', (req, res) => {
         })
         await downloadAllToZip(result)
         res.sendFile(path.join(__dirname, "..", ZIP_PATH))
-        con.release()
+        
       }
     })
   })

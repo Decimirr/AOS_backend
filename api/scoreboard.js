@@ -19,7 +19,7 @@ router.get('/by-training/:training_id', (req, res) => {
         con.query(sql, query_param, (err, result) => {
             if (err) res.json(util.successFalse(err))
             else res.json(util.successTrue(result))
-            con.release()
+            
         })
     })
 
@@ -31,7 +31,7 @@ router.get('/by-mission/:mission_id', (req, res) => {
         con.query(sql, query_param, (err, result) => {
             if (err) {console.log(err); res.json(util.successFalse(err)) }
             else res.json(util.successTrue(result))
-            con.release()
+            
         })
     })
 
@@ -43,7 +43,7 @@ router.get('/by-team/:team_id', (req, res) => {
         con.query(sql, query_param, (err, result) => {
             if (err) res.json(util.successFalse(err))
             else res.json(util.successTrue(result))
-            con.release()
+            
         })
     })
 
@@ -55,7 +55,7 @@ router.get('/one/:mission_id/:team_id', (req, res) => {
         con.query(sql, query_param, (err, result) => {
             if (err) res.json(util.successFalse(err))
             else res.json(util.successTrue(result[0]))
-            con.release()
+            
         })
     })
 
@@ -69,7 +69,7 @@ router.get('/total-score/:training_id', (req, res) => {
         con.query(sql, query_param, (err, result) => {
             if (err) res.json(util.successFalse(err))
             else res.json(util.successTrue(result))
-            con.release()
+            
         })
     })
 
@@ -84,7 +84,7 @@ router.get('/teams-cleared/:training_id', (req, res) => {
             console.log(result)
             if (err) res.json(util.successFalse(err))
             else res.json(util.successTrue(result))
-            con.release()
+            
         })
     })
 
@@ -95,7 +95,7 @@ router.post('/submit', (req, res) => {
         const required_keys = ["mission_id", "team_id", "answer"]
         for (const key of required_keys){
             if (req.body[key] == null) {
-                con.release()
+                
                 return res.json(util.successFalse("KeyNotExist", key + " is not exist"))
             }
         }
@@ -103,8 +103,8 @@ router.post('/submit', (req, res) => {
         const sql1 = "SELECT * FROM scoreboard WHERE mission_id=? and team_id=?"
         const param1 = [req.body.mission_id, req.body.team_id]
         con.query(sql1, param1, (err, result) => {
-            if (err) { con.release(); console.log(err); return res.json(util.successFalse(err, "problem with fetching scoreboard")) }
-            if (result[0]?.status === 'correct') { con.release(); return res.json(util.successTrue(err, "이미 정답처리된 미션입니다.")) }
+            if (err) { ; console.log(err); return res.json(util.successFalse(err, "problem with fetching scoreboard")) }
+            if (result[0]?.status === 'correct') { ; return res.json(util.successTrue(err, "이미 정답처리된 미션입니다.")) }
 
             const scoreboard = result[0]
 
@@ -118,7 +118,7 @@ router.post('/submit', (req, res) => {
                     answer: req.body.answer,
                 }
                 con.query(sql2, param2, (err, result) => {
-                    con.release()
+                    
                     if (err) { console.log(err); return res.json(util.successFalse(err, "problem with creating scoreboard"));}
                     return res.json(util.successTrue(param2))
                 })
@@ -131,7 +131,7 @@ router.post('/submit', (req, res) => {
                     req.body.team_id,
                 ]
                 con.query(sql3, param3, (err, result) => {
-                    con.release()
+                    
                     if (err) return res.json(util.successFalse(err, "problem with updating scoreboard"))
                     return res.json(util.successTrue(null))
                 })
@@ -146,7 +146,7 @@ router.post('/submit/text', (req, res) => {
         const required_keys = ["mission_id", "team_id", "answer"]
         for (const key of required_keys){
             if (req.body[key] == null) {
-                con.release()
+                
                 return res.json(util.successFalse("KeyNotExist", key + " is not exist"))
             }
         }
@@ -155,7 +155,7 @@ router.post('/submit/text', (req, res) => {
         const mission_param = [req.body.mission_id]
         con.query(sql_mission, mission_param, (err, result) => {
             if (err || result.length === 0) {
-                con.release()
+                
                 res.json(util.successFalse(err, "Mission not fount (FATAL!)"))
                 return
             }
@@ -164,7 +164,7 @@ router.post('/submit/text', (req, res) => {
             const scoreboard_param = [req.body.mission_id, req.body.team_id]
             con.query(sql_scoreboard, scoreboard_param, (err, result) => {
                 if (result && result.length !== 0 && result[0].status === "correct") { // 이미 풀림
-                    con.release()
+                    
                     return res.json(util.successFalse("Already solved", "problem is already solved"))
                 }
                 else{ // 안풀림
@@ -176,7 +176,7 @@ router.post('/submit/text', (req, res) => {
                             const sql_submit = "INSERT INTO scoreboard SET ? ON DUPLICATE KEY UPDATE submit_count=submit_count+1"
                             const submit_param = [{mission_id: mission._id, team_id: req.body.team_id, score: 0, status: "wrong"}]
                             con.query(sql_submit, submit_param, (err, result) => {
-                                con.release()
+                                
                                 if (err) {console.log(err); res.json(util.successFalse(err, "err while marking wrong in unmanned mission")); return; }
                                 else { res.json(util.successTrue(result)); return; }
                             })
@@ -186,7 +186,7 @@ router.post('/submit/text', (req, res) => {
                             const new_data = { mission_id: mission._id, team_id: req.body.team_id, score: mission_text_answer.base_score, status: "correct" }
                             const submit_param = [new_data, mission_text_answer.min_score, mission_text_answer.base_score, mission_text_answer.decr_score, mission_text_answer.min_score, mission_text_answer.base_score, mission_text_answer.decr_score]
                             con.query(sql_submit, submit_param, (err, result) => {
-                                con.release()
+                                
                                 if (err) { console.log(err); res.json(util.successFalse(err, "err while marking correct in unmanned mission")); return; }
                                 else { res.json(util.successTrue(result)); return; }
                             })
@@ -215,7 +215,7 @@ router.post('/check', (req, res) => {
         }
         const query_param = [ new_data, update_data ]
         con.query(sql_check, query_param, (err, result) => {
-            con.release()
+            
             if (err) { console.log(err); res.json(util.successFalse(err, "err while checking")); return; }
             else { res.json(util.successTrue(result)); return; }
         })
@@ -228,7 +228,7 @@ router.delete("/:mission_id/:team_id", (req, res) => {
         const sql = "DELETE FROM scoreboard WHERE mission_id=? and team_id=?; DELETE FROM started_time WHERE mission_id=? and team_id=?;"
         const query_param = [req.params.mission_id, req.params.team_id, req.params.mission_id, req.params.team_id]
         con.query(sql, query_param, (err, result) => {
-            con.release()
+            
             if (err) { console.log(err); res.json(util.successFalse(err)); }
             else res.json(util.successTrue(result))
         })

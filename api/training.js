@@ -9,7 +9,7 @@ router.get('/', (req, res) => {
     getConnection(con => {
         const sql = 'SELECT * FROM training'
         con.query(sql, function (err, result, fields) {
-            con.release()
+            
             if (err || !result) {
                 console.log(err)
                 return res.json(util.successFalse(err));
@@ -25,7 +25,7 @@ router.get('/by-code/:code', (req, res) => {
         const sql = "SELECT * FROM training WHERE company_code=?"
         const query_param = [req.params.code]
         con.query(sql, query_param, (err, result) => {
-            con.release()
+            
             if (err || result.length === 0) return res.json(util.successFalse(err))
             else return res.json(util.successTrue(result[0]))
         })
@@ -38,7 +38,7 @@ router.get('/:id', (req, res) => {
         const sql = `SELECT * FROM training WHERE _id = ${req.params.id}`
         const query_param = []
         con.query(sql, query_param, function(err, result, fields){
-            con.release()
+            
             if (err || !result) return res.json(util.successFalse(err));
             res.json(util.successTrue(result[0]))
         })
@@ -52,7 +52,7 @@ router.post('/', (req, res) => {
         const query_param = [req.body.order_code, req.body.company_code, req.body.company_name, req.body.training_name, req.body.summary, req.body.tips]
         console.log(query_param)
         con.query(sql, query_param, function (err, result, fields) {
-            con.release()
+            
             if (err || !result) return res.json(util.successFalse(err));
             res.json(util.successTrue(result))
         })
@@ -88,7 +88,7 @@ router.put('/:id', (req, res) => {
                 })
             }
         }
-        con.release()
+        
         if (errs.length !== 0)
             return res.json(util.successFalse(errs))
         else
@@ -101,7 +101,7 @@ router.delete('/:id', (req, res) => {
         const sql = `DELETE FROM training WHERE _id = ${req.params.id}`
         const query_param = []
         con.query(sql, query_param, function (err, result, fields){
-            con.release()
+            
             if (err || !result)
                 res.json(util.successFalse(err));
             else res.json(util.successTrue(result))
@@ -116,7 +116,7 @@ router.get("/manual-map/:id", (req, res) => {
         const sql = "SELECT * FROM manual_map WHERE training_id=?"
         const query_param = [req.params.id]
         con.query(sql, query_param, (err, result) => {
-            con.release()
+            
             if (err) { console.log(err); res.json(util.successFalse(err)); }
             else { res.json(util.successTrue(result)) }
         })
@@ -126,7 +126,7 @@ router.get("/manual-map/:id", (req, res) => {
 router.post("/manual-map/:id", uploads.upload_blob.single("manual_map_image"), (req, res) => {
     getConnection(con => {
         if (req.file == null) {
-            con.release()
+            
             return res.json(util.successFalse("No problem image provided", "No problem image provided"))
         }
         const sql = "INSERT INTO manual_map SET ?"
@@ -135,7 +135,7 @@ router.post("/manual-map/:id", uploads.upload_blob.single("manual_map_image"), (
             map_image: req.file.url.split("?")[0]
         }
         con.query(sql, query_param, (err, result) => {
-            con.release()
+            
             if (err) { console.log(err); res.json(util.successFalse(err, "err with upload problem image")) }
             else res.json(util.successTrue(result[0]))
         })
@@ -147,7 +147,7 @@ router.delete("/manual-map/:id", (req, res) => {
         const sql = "DELETE FROM manual_map WHERE _id=?"
         const query_param = [req.params.id]
         con.query(sql, query_param, (err, result) => {
-            con.release()
+            
             if (err) { console.log(err); res.json(util.successFalse(err, "err with delete problem image")) }
             else res.json(util.successTrue(result))
         })

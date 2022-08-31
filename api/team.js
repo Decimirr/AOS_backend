@@ -12,7 +12,7 @@ router.get('/:id', (req, res) => {
         const query_param = []
         console.log(`GET team data ${ req.params.id }`)
         con.query(sql, query_param, function(err, result, fields){
-            con.release()
+            
             if (err || !result) return res.json(util.successFalse(err));
             res.json(util.successTrue(result))
         })
@@ -25,7 +25,7 @@ router.get('/by-passcode/:passcode', (req, res) => {
         const sql = 'SELECT * FROM team WHERE passcode=?'
         const query_param = [req.params.passcode]
         con.query(sql, query_param, (err, result) => {
-            con.release()
+            
             if (err) return res.json(util.successFalse(err))
             else if (!result[0]) return res.json(util.successFalse("TeamNotExist", "팀이 존재하지 않습니다"))
             else {
@@ -43,7 +43,7 @@ router.get('/by-training/:id', (req, res) => {
         const query_param = []
         console.log(`GET team data ${ req.params.id }`)
         con.query(sql, query_param, function(err, result, fields){
-            con.release()
+            
             if (err || !result) return res.json(util.successFalse(err));
             res.json(util.successTrue(result))
         })
@@ -80,7 +80,7 @@ router.post('/', (req, res) => {
                     passcode: new_passcode,
                 }
                 con.query(sql, query_param, function (err, result) {
-                    con.release()
+                    
                     if (err || !result) return res.json(util.successFalse(err));
                     return res.json(util.successTrue(result))
                 })
@@ -99,7 +99,7 @@ router.put('/:id', (req, res) => {
                 else res.json(util.successTrue(result))
             })
         }
-        con.release()
+        
     })
 
 })
@@ -109,7 +109,7 @@ router.delete('/:id', (req, res) => {
         const query_param = []
         console.log('DELETE team')
         con.query(sql, query_param, function (err, result, fields){
-            con.release()
+            
             if (err || !result) return res.json(util.successFalse(err));
             res.json(util.successTrue(result))
         })

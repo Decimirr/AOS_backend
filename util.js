@@ -62,7 +62,7 @@ async function getClearedTeamSummary(training_id){
                 console.log(result)
                 if (err) reject(err)
                 else resolve(result)
-                con.release()
+                
             })
         })
     })
