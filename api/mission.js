@@ -171,7 +171,7 @@ router.get("/timer/:team_id", (req, res) => {
                             console.log(new Date(started_time[mission_id]))
                             console.log(new Date().getTime() - new Date(started_time[mission_id]).getTime())
 
-                            const remain = (started_time[mission_id] + pre_timer[mission_id] * 1000 - new Date().getTime()) / 1000
+                            const remain = (started_time[mission_id] + pre_timer[mission_id] * 1000 - new Date().getTime()) / 1000 - 9 * 60 * 60
                             result_data[mission_id] = { started: true, remaining: remain }
 
                             if (remain < 0){
