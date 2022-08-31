@@ -121,10 +121,12 @@ router.get('/prerequisites/:team_id', (req, res) => {
                     const pre = {}
                     for (const item of result){
                         pre[item.mission_id] = JSON.parse(item.prerequisites)
-                        console.log(pre)
+                        //console.log(pre)
                         pre_status[item.mission_id] = pre[item.mission_id].mission.every((id) => mission_personal[id] == null || mission_personal[id].is_correct )
-                        pre_status[item.mission_id] &&= ( pre[item.mission_id].start_time == null || new Date(pre[item.mission_id].start_time) < new Date() )
-                        pre_status[item.mission_id] &&= ( pre[item.mission_id].end_time == null || new Date(pre[item.mission_id].end_time) > new Date() )
+                        pre_status[item.mission_id] &&= ( pre[item.mission_id].from == null || new Date(pre[item.mission_id].from) < new Date() )
+                        //console.log("from condition", pre[item.mission_id].from, new Date())
+                        pre_status[item.mission_id] &&= ( pre[item.mission_id].to == null || new Date(pre[item.mission_id].to) > new Date() )
+                        //console.log("to condition", pre[item.mission_id].to, new Date())
                     }
                     console.log('pre_status', pre_status)
 
