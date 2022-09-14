@@ -74,11 +74,12 @@ const saveAllFile = async (training_id, callback) => {
   const streamDict = {}; // to have a map of blobName and it's corresponding stream
 
   getConnection(con => {
-    con.query("SELECT * FROM (SELECT _id, training_id, mission_name FROM mission WHERE training_id=8) a JOIN (SELECT * FROM (SELECT * FROM scoreboard) q JOIN (SELECT _id, team_name FROM team) w on q.team_id=w._id) b ON a._id=b.mission_id;", [training_id], async (err, result) => {
+    con.query("SELECT * FROM (SELECT _id, training_id, mission_name FROM mission WHERE training_id=?) a JOIN (SELECT * FROM (SELECT * FROM scoreboard) q JOIN (SELECT _id, team_name FROM team) w on q.team_id=w._id) b ON a._id=b.mission_id;", [training_id], async (err, result) => {
         if (err) {
           console.log(err)
           return;
         } else {
+          console.log(result)
           const totalCount = result.length
           let currCount = 1
           for (const item of result) {
@@ -162,8 +163,10 @@ async function streamsToCompressed(streamDict, outputFilePath) {
   });
 }
 
-
-
+/*
+saveAllFile(1, ()=>{
+  console.log("tested")
+})*/
 
 /*
 const saveAllFile = async (training_id) => {
