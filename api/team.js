@@ -116,6 +116,14 @@ router.delete('/:id', (req, res) => {
     })
 
 })
+router.delete('/all/:training_id', (req, res) => {
+    getConnection(con => {
+        con.query('DELETE FROM team WHERE training_id=?', [req.params.training_id], (err, result) => {
+            if (err) return res.json(util.successFalse(err, "삭제에 실패했습니다."));
+            res.json(util.successTrue())
+        })
+    })
+})
 
 
 router.get('/session/:session_id', (req, res) => {
