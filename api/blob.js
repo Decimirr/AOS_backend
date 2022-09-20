@@ -8,7 +8,7 @@ const {StorageSharedKeyCredential, BlobServiceClient} = require("@azure/storage-
 const fs = require("fs");
 const archiver = require("archiver");
 
-const ZIP_PATH = "./allFileTest.zip"
+const STATIC_PATH = "./static"
 
 
 
@@ -29,7 +29,7 @@ router.post("/multiple", uploads.upload_blob.array("files"), (req, res) => {
 
 router.get('/all/:training_id', (req, res) => {
   saveAllFile(req.params.training_id, ()=>{
-    res.sendFile(path.join(__dirname, "..", ZIP_PATH))
+    res.json(util.successTrue(null))
   })
 
   /*getConnection(con => {
@@ -65,7 +65,7 @@ const saveAllFile = async (training_id, callback) => {
   const ACCOUNT_ACCESS_KEY = process.env.storage_key || "S9T5x7RaFD5l055yLg4AN37VyUh9iKBKwW0Yt+aZTPtD9NitKUH0T17Fg/DsFNl1b8qx+E2d5lfW+AStfkJckw==";
   const containerName = "aosfile";
 
-  const saveLocation = ZIP_PATH
+  const saveLocation = path.join(__dirname, "..", STATIC_PATH, `${training_id}.zip`)
 
   const credentials = new StorageSharedKeyCredential(STORAGE_ACCOUNT_NAME, ACCOUNT_ACCESS_KEY);
   const blobServiceClient = new BlobServiceClient(`https://${STORAGE_ACCOUNT_NAME}.blob.core.windows.net`,credentials);
@@ -163,10 +163,6 @@ async function streamsToCompressed(streamDict, outputFilePath) {
   });
 }
 
-/*
-saveAllFile(1, ()=>{
-  console.log("tested")
-})*/
 
 /*
 const saveAllFile = async (training_id) => {

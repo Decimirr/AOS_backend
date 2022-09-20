@@ -21,6 +21,7 @@ app.use(function (req, res, next) {
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+app.use('/static', express.static(path.join(__dirname, 'static')))
 
 app.use("/api/training", require("./api/training"));
 app.use("/api/mission", require("./api/mission"));
