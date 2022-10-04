@@ -11,6 +11,13 @@ const archiver = require("archiver");
 const STATIC_PATH = "./static"
 
 
+const STORAGE_ACCOUNT_NAME = "storecuwvv4ix3vtva";
+const ACCOUNT_ACCESS_KEY = process.env.storage_key || "S9T5x7RaFD5l055yLg4AN37VyUh9iKBKwW0Yt+aZTPtD9NitKUH0T17Fg/DsFNl1b8qx+E2d5lfW+AStfkJckw==";
+const containerName = "aosfile";
+const credentials = new StorageSharedKeyCredential(STORAGE_ACCOUNT_NAME, ACCOUNT_ACCESS_KEY);
+const blobServiceClient = new BlobServiceClient(`https://${STORAGE_ACCOUNT_NAME}.blob.core.windows.net`,credentials);
+const containerClient = blobServiceClient.getContainerClient(containerName);
+
 
 router.post("/", uploads.upload_blob.single("file"), (req, res) => {
   req.file.url = req.file.url.split("?")[0]
@@ -29,7 +36,22 @@ router.post("/multiple", uploads.upload_blob.array("files"), (req, res) => {
 
 router.get('/all/:training_id', (req, res) => {
   saveAllFile(req.params.training_id, ()=>{
-    res.json(util.successTrue(null))
+    const zipPath = path.join(__dirname, "..", STATIC_PATH, `${req.params.training_id}.zip`)
+    fs.readFile(zipPath, async (err, data) => {
+      if (err != null) {
+        console.log(err)
+        res.json(util.successFalse(err, "err while uploading zip"))
+      } else {
+        const blobName = `${req.params.training_id}.zip`
+        const blockBlobClient = containerClient.getBlockBlobClient(blobName)
+        console.log(`uploading ${blobName} to ${blockBlobClient.url}`)
+        const uploadBlobResponse = await blockBlobClient.upload(data, data.length)
+        if (uploadBlobResponse.errorCode == null)
+          res.json(util.successTrue(null))
+        else
+          res.json(util.successFalse(uploadBlobResponse.errorCode, 'err while uploading blob'))
+      }
+    })
   })
 
   /*getConnection(con => {
@@ -103,15 +125,14 @@ const saveAllFile = async (training_id, callback) => {
               }
             }
           }
-          await streamsToCompressed(streamDict, saveLocation);
-          callback()
+          streamsToCompressed(streamDict, saveLocation, callback);
         }
       }
     )
   })
 }
 
-async function streamsToCompressed(streamDict, outputFilePath) {
+async function streamsToCompressed(streamDict, outputFilePath, callback) {
   return new Promise((resolve, reject) => {
 
     const fs = require("fs");
@@ -129,6 +150,7 @@ async function streamsToCompressed(streamDict, outputFilePath) {
     output.on('close', () => {
       console.log(archive.pointer() + ' total bytes');
       console.log('archiver has been finalized and the output file descriptor has closed.');
+      callback()
     });
 
     // good practice to catch warnings (ie stat failures and other non-blocking errors)
