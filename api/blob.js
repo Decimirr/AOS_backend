@@ -8,7 +8,7 @@ const {StorageSharedKeyCredential, BlobServiceClient} = require("@azure/storage-
 const fs = require("fs");
 const archiver = require("archiver");
 
-const STATIC_PATH = "./static"
+const STATIC_PATH = "./uploads"
 
 
 const STORAGE_ACCOUNT_NAME = "storecuwvv4ix3vtva";
