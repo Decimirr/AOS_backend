@@ -53,7 +53,14 @@ router.get('/one/:mission_id/:team_id', (req, res) => {
         const sql = "SELECT * FROM scoreboard WhERE mission_id=? and team_id=?"
         const query_param = [req.params.mission_id, req.params.team_id]
         con.query(sql, query_param, (err, result) => {
-            if (err) res.json(util.successFalse(err))
+            if (err) return res.json(util.successFalse(err))
+            else if (result[0] == null) return res.json(util.successTrue({
+                mission_id: req.params.mission_id,
+                team_id: req.params.team_id,
+                score: 0,
+                answer: {},
+                status: "",
+            }))
             else res.json(util.successTrue(result[0]))
             
         })
@@ -95,7 +102,6 @@ router.post('/submit', (req, res) => {
         const required_keys = ["mission_id", "team_id", "answer"]
         for (const key of required_keys){
             if (req.body[key] == null) {
-                
                 return res.json(util.successFalse("KeyNotExist", key + " is not exist"))
             }
         }
@@ -108,35 +114,122 @@ router.post('/submit', (req, res) => {
 
             const scoreboard = result[0]
 
-            if (scoreboard == null) {
-                const sql2 = "INSERT INTO scoreboard SET ?"
-                const param2 = {
+            const sql2 = "INSERT INTO scoreboard SET ? ON DUPLICATE KEY UPDATE ?"
+            const param2 = [
+                {
                     mission_id: req.body.mission_id,
                     team_id: req.body.team_id,
                     score: 0,
                     status: "pending",
                     answer: req.body.answer,
+                },
+                {
+                    score: 0,
+                    status: "pending",
+                    answer: req.body.answer,
                 }
-                con.query(sql2, param2, (err, result) => {
-                    
-                    if (err) { console.log(err); return res.json(util.successFalse(err, "problem with creating scoreboard"));}
-                    return res.json(util.successTrue(param2))
-                })
-            }
-            else{
-                const sql3 = "UPDATE scoreboard SET ? WHERE mission_id=? and team_id=?"
-                const param3 = [
-                    { status: "pending", answer: req.body.answer },
-                    req.body.mission_id,
-                    req.body.team_id,
-                ]
-                con.query(sql3, param3, (err, result) => {
-                    
-                    if (err) return res.json(util.successFalse(err, "problem with updating scoreboard"))
-                    return res.json(util.successTrue(null))
-                })
-            }
+            ]
+            con.query(sql2, param2, (err, result) => {
 
+                if (err) { console.log(err); return res.json(util.successFalse(err, "problem with creating scoreboard"));}
+                return res.json(util.successTrue(param2))
+            })
+
+        })
+    })
+})
+
+router.post('/submit/auto', (req, res) => {
+    const required_keys = ["mission_id", "team_id", "title", "answer"]
+    for (const key of required_keys){
+        if (req.body[key] == null) {
+            return res.json(util.successFalse("KeyNotExist", key + " is not exist"))
+        }
+    }
+    const mission_id = req.body.mission_id
+    const team_id = req.body.team_id
+    const answer = req.body.answer
+    const title = req.body.title
+    console.log(mission_id, team_id, answer, title)
+
+    getConnection(con => {
+        con.query("SELECT content, prerequisites FROM mission WHERE _id=?", mission_id, (err, result) => {
+            if (err || !result) return res.json(util.successFalse(err, "본부에 문의하세요. Err mission not found"))
+            console.log(result[0])
+            const mission = result[0]
+            const content = JSON.parse(mission.content)
+            const submit = content.submit
+            const auto_manager = submit.filter(e => e.block_type === 'auto')[0]
+            if (auto_manager == null) return res.json(util.successFalse(err, "본부에 문의하세요. Err auto manager block not found"))
+            const auto_submits = submit.filter(e => e.auto === true)
+            const auto_titles = []
+            console.log("content", content)
+            console.log("auto_manager", auto_manager)
+            console.log("deduction", auto_manager.deduction)
+
+            for(const auto_submit of auto_submits){
+                console.log("auto_submit", auto_submit)
+                auto_titles.push(auto_submit.title)
+            }
+            console.log("auto_titles", auto_titles)
+            const auto_target = auto_submits.find(e => e.title === title)
+            if (auto_target == null) return res.json(util.successFalse(err, "본부에 문의하세요. Err submit block not found"))
+
+            con.query("SELECT * FROM scoreboard WHERE mission_id=? and team_id=?", [mission_id, team_id], (err, result) => {
+                console.log(result[0])
+                if (err) return res.json(util.successFalse(err, "본부에 문의하세요. Err scoreboard not found"))
+                const scoreboard_data = {}
+                if (result[0] == null){
+                    scoreboard_data.score = 0
+                    scoreboard_data.status = ""
+                    scoreboard_data.answer = {}
+                }
+                else{
+                    scoreboard_data.score = result[0].score
+                    scoreboard_data.status = result[0].status
+                    scoreboard_data.answer = JSON.parse(result[0].answer)
+                }
+
+                const is_correct = auto_target.block_type === 'location' || answer === auto_target.answer
+
+                let is_mission_success = true
+                if (is_correct){
+                    scoreboard_data.answer[title] = true
+
+                    for(const auto_title of auto_titles){
+                        if (scoreboard_data.answer[auto_title] == null || scoreboard_data.answer[auto_title] === false){
+                            is_mission_success = false
+                            break
+                        }
+                    }
+
+                    if (is_mission_success){
+                        scoreboard_data.score += +(auto_manager.base_score)
+                        if (scoreboard_data.score < +(auto_manager.min_score)){
+                            scoreboard_data.score = +(auto_manager.min_score)
+                        }
+                        scoreboard_data.status = "correct"
+                        // 시간 보너스 로직
+                    }
+                }
+                else{
+                    scoreboard_data.answer[title] = false
+                    const deduct = auto_manager.deduction.find(e => e.title === title)?.value ?? 0
+                    scoreboard_data.score -= deduct
+                    scoreboard_data.status = 'wrong'
+                }
+
+                scoreboard_data.answer = JSON.stringify(scoreboard_data.answer)
+                const insert_data = { mission_id: mission_id, team_id: team_id }
+                Object.assign(insert_data, scoreboard_data)
+                console.log(insert_data)
+                const update_data = scoreboard_data
+                con.query("INSERT INTO scoreboard SET ? ON DUPLICATE KEY UPDATE ?", [insert_data, update_data], (err, result) => {
+                    if (err) console.log(err)
+                    if (err) return res.json(util.successFalse(err, "본부에 문의하세요. Err cannot edit scoreboard"))
+                    res.json(util.successTrue(null))
+                })
+            })
         })
     })
 })
