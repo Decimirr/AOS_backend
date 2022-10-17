@@ -158,6 +158,7 @@ router.post('/submit/auto', (req, res) => {
             console.log(result[0])
             const mission = result[0]
             const content = JSON.parse(mission.content)
+            const prerequisites = JSON.parse(mission.prerequisites)
             const submit = content.submit
             const auto_manager = submit.filter(e => e.block_type === 'auto')[0]
             if (auto_manager == null) return res.json(util.successFalse(err, "본부에 문의하세요. Err auto manager block not found"))
@@ -190,44 +191,59 @@ router.post('/submit/auto', (req, res) => {
                     scoreboard_data.answer = JSON.parse(result[0].answer)
                 }
 
-                const is_correct = auto_target.block_type === 'location' || answer === auto_target.answer
-
-                let is_mission_success = true
-                if (is_correct){
-                    scoreboard_data.answer[title] = true
-
-                    for(const auto_title of auto_titles){
-                        if (scoreboard_data.answer[auto_title] == null || scoreboard_data.answer[auto_title] === false){
-                            is_mission_success = false
-                            break
-                        }
+                con.query("SELECT * FROM started_time WHERE mission_id=? and team_id=?", [mission_id, team_id], (err, result) => {
+                    let bonus = 0
+                    if (!err && result[0].time != null && prerequisites.timer != null && prerequisites.bonus != null && prerequisites.bonus !== 0){
+                        console.log("start_time", new Date(result[0].time))
+                        console.log("end_time", new Date())
+                        const start_time_value = new Date(result[0].time).getTime()
+                        const end_time_value = new Date().getTime()
+                        const delta_ms = end_time_value - start_time_value - 9 * 3600 * 1000
+                        console.log("delta_ms", delta_ms)
+                        bonus = prerequisites.bonus * (prerequisites.timer * 1000 - delta_ms) / 60000
                     }
 
-                    if (is_mission_success){
-                        scoreboard_data.score += +(auto_manager.base_score)
-                        if (scoreboard_data.score < +(auto_manager.min_score)){
-                            scoreboard_data.score = +(auto_manager.min_score)
-                        }
-                        scoreboard_data.status = "correct"
-                        // 시간 보너스 로직
-                    }
-                }
-                else{
-                    scoreboard_data.answer[title] = false
-                    const deduct = auto_manager.deduction.find(e => e.title === title)?.value ?? 0
-                    scoreboard_data.score -= deduct
-                    scoreboard_data.status = 'wrong'
-                }
 
-                scoreboard_data.answer = JSON.stringify(scoreboard_data.answer)
-                const insert_data = { mission_id: mission_id, team_id: team_id }
-                Object.assign(insert_data, scoreboard_data)
-                console.log(insert_data)
-                const update_data = scoreboard_data
-                con.query("INSERT INTO scoreboard SET ? ON DUPLICATE KEY UPDATE ?", [insert_data, update_data], (err, result) => {
-                    if (err) console.log(err)
-                    if (err) return res.json(util.successFalse(err, "본부에 문의하세요. Err cannot edit scoreboard"))
-                    res.json(util.successTrue(null))
+                    const is_correct = auto_target.block_type === 'location' || answer === auto_target.answer
+
+                    let is_mission_success = true
+                    if (is_correct){
+                        scoreboard_data.answer[title] = true
+
+                        for(const auto_title of auto_titles){
+                            if (scoreboard_data.answer[auto_title] == null || scoreboard_data.answer[auto_title] === false){
+                                is_mission_success = false
+                                break
+                            }
+                        }
+
+                        if (is_mission_success){
+                            scoreboard_data.score += +(auto_manager.base_score)
+                            if (scoreboard_data.score < +(auto_manager.min_score)){
+                                scoreboard_data.score = +(auto_manager.min_score)
+                            }
+                            scoreboard_data.status = "correct"
+                            scoreboard_data.score += bonus
+                            scoreboard_data.time_bonus = bonus
+                        }
+                    }
+                    else{
+                        scoreboard_data.answer[title] = false
+                        const deduct = auto_manager.deduction.find(e => e.title === title)?.value ?? 0
+                        scoreboard_data.score -= deduct
+                        scoreboard_data.status = 'wrong'
+                    }
+
+                    scoreboard_data.answer = JSON.stringify(scoreboard_data.answer)
+                    const insert_data = { mission_id: mission_id, team_id: team_id }
+                    Object.assign(insert_data, scoreboard_data)
+                    console.log(insert_data)
+                    const update_data = scoreboard_data
+                    con.query("INSERT INTO scoreboard SET ? ON DUPLICATE KEY UPDATE ?", [insert_data, update_data], (err, result) => {
+                        if (err) console.log(err)
+                        if (err) return res.json(util.successFalse(err, "본부에 문의하세요. Err cannot edit scoreboard"))
+                        res.json(util.successTrue(null))
+                    })
                 })
             })
         })
