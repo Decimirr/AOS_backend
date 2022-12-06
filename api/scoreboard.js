@@ -193,7 +193,7 @@ router.post('/submit/auto', (req, res) => {
 
                 con.query("SELECT * FROM started_time WHERE mission_id=? and team_id=?", [mission_id, team_id], (err, result) => {
                     let bonus = 0
-                    if (!err && result[0].time != null && prerequisites.timer != null && prerequisites.bonus != null && prerequisites.bonus !== 0){
+                    if (!err && result[0] != null && result[0].time != null && prerequisites.timer != null && prerequisites.bonus != null && prerequisites.bonus !== 0){
                         console.log("start_time", new Date(result[0].time))
                         console.log("end_time", new Date())
                         const start_time_value = new Date(result[0].time).getTime()
